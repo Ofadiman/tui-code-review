@@ -119,27 +119,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			activeColumnStyle.Width(msg.Width/2 - horizontalFrameSize)
 			debug(strconv.Itoa(msg.Width))
 
-			m.waiting = list.New([]list.Item{}, list.NewDefaultDelegate(), 0, 0)
-			m.waiting.SetItems([]list.Item{
-				&PullRequest{
-					id:    "db9eede3-0c80-456a-b323-e8c302506950",
-					title: "implement feature 1",
-				},
-				&PullRequest{
-					id:    "4c8e08dc-92da-4397-839a-2cad98706d3a",
-					title: "implement feature 2",
-				},
-			})
 			m.waiting.SetSize(msg.Width/2-horizontalFrameSize, msg.Height-verticalFrameSize)
 			m.waiting.SetShowHelp(false)
 
-			m.checked = list.New([]list.Item{}, list.NewDefaultDelegate(), 0, 0)
-			m.checked.SetItems([]list.Item{
-				&PullRequest{
-					id:    "42660d9c-cabd-4372-968d-e68087e42c65",
-					title: "implement feature 3",
-				},
-			})
 			m.checked.SetSize(msg.Width/2-horizontalFrameSize, msg.Height-verticalFrameSize)
 			m.checked.SetShowHelp(false)
 
@@ -164,7 +146,27 @@ func (m *Model) View() string {
 }
 
 func main() {
-	program := tea.NewProgram(&Model{activeColumn: Waiting}, tea.WithAltScreen())
+	model := &Model{
+		activeColumn: Waiting,
+		waiting: list.New([]list.Item{
+			&PullRequest{
+				id:    "db9eede3-0c80-456a-b323-e8c302506950",
+				title: "implement feature 1",
+			},
+			&PullRequest{
+				id:    "4c8e08dc-92da-4397-839a-2cad98706d3a",
+				title: "implement feature 2",
+			},
+		}, list.NewDefaultDelegate(), 0, 0),
+		checked: list.New([]list.Item{
+			&PullRequest{
+				id:    "42660d9c-cabd-4372-968d-e68087e42c65",
+				title: "implement feature 3",
+			},
+		}, list.NewDefaultDelegate(), 0, 0),
+	}
+
+	program := tea.NewProgram(model, tea.WithAltScreen())
 	if _, err := program.Run(); err != nil {
 		panic(err)
 	}
