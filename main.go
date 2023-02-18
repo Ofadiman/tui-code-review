@@ -63,6 +63,14 @@ func (m *Model) ToggleActiveColumn() {
 	}
 }
 
+func (m *Model) GetActiveList() *list.Model {
+	if m.activeColumn == Waiting {
+		return &m.waiting
+	} else {
+		return &m.checked
+	}
+}
+
 func (m *Model) Init() tea.Cmd {
 	return nil
 }
@@ -89,10 +97,28 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			case "up", "k":
 				{
+					if m.activeColumn == Waiting {
+						updatedList, cmd := m.waiting.Update(msg)
+						m.waiting = updatedList
+						return m, cmd
+					} else {
+						updatedList, cmd := m.checked.Update(msg)
+						m.checked = updatedList
+						return m, cmd
+					}
 				}
 
 			case "down", "j":
 				{
+					if m.activeColumn == Waiting {
+						updatedList, cmd := m.waiting.Update(msg)
+						m.waiting = updatedList
+						return m, cmd
+					} else {
+						updatedList, cmd := m.checked.Update(msg)
+						m.checked = updatedList
+						return m, cmd
+					}
 				}
 
 			case "left", "h":
@@ -157,11 +183,19 @@ func main() {
 				id:    "4c8e08dc-92da-4397-839a-2cad98706d3a",
 				title: "implement feature 2",
 			},
+			&PullRequest{
+				id:    "c0a9ebb2-9ff9-449e-86c0-c7313acc2591",
+				title: "implement feature 4",
+			},
 		}, list.NewDefaultDelegate(), 0, 0),
 		checked: list.New([]list.Item{
 			&PullRequest{
 				id:    "42660d9c-cabd-4372-968d-e68087e42c65",
 				title: "implement feature 3",
+			},
+			&PullRequest{
+				id:    "14d32ef4-043a-41ad-bcad-28b695248b3a",
+				title: "implement feature 5",
 			},
 		}, list.NewDefaultDelegate(), 0, 0),
 	}
