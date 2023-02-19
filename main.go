@@ -1,11 +1,18 @@
 package main
 
 import (
+	"fmt"
+	"log"
 	"strconv"
+
+	"github.com/kelseyhightower/envconfig"
+
+	"github.com/joho/godotenv"
 
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/machinebox/graphql"
 )
 
 func debug(msg string) {
@@ -24,6 +31,8 @@ func debug(msg string) {
 		panic(err)
 	}
 }
+
+var githubGraphqlClient = graphql.NewClient("https://api.github.com/graphql")
 
 type PullRequest struct {
 	id    string
@@ -169,6 +178,60 @@ func (m *Model) View() string {
 	}
 
 	panic("invalid activeColumn value")
+}
+
+type Env struct {
+	GitHubToken string `envconfig:"GITHUB_TOKEN" required:"true"`
+}
+
+var env Env
+
+func init() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	err = envconfig.Process("", &env)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	debug(fmt.Sprintf("%#v", env))
+
+	req := graphql.NewRequest(`{
+  repository(owner: "Ofadiman", name: "tui-code-review") {
+    id
+    pullRequests (first: 20) {
+      nodes {
+        isDraft
+        author {
+          login
+        }
+        createdAt
+        latestReviews (first: 20) {
+          nodes {
+            author {
+              login
+            }
+          }
+        }
+        title
+        reviewRequests (first: 20) {
+          nodes {
+            requestedReviewer {
+              ...on User {
+                login
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}`)
+
+	req.Header.Set("Authorization", "Bearer ")
 }
 
 func main() {
