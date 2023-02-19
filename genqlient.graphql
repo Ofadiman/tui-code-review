@@ -1,0 +1,31 @@
+query getRepositoryInfo {
+    repository(owner: "Ofadiman", name: "tui-code-review") {
+        id
+        pullRequests (first: 20) {
+            nodes {
+                isDraft
+                author {
+                    login
+                }
+                createdAt
+                latestReviews (first: 20) {
+                    nodes {
+                        author {
+                            login
+                        }
+                    }
+                }
+                title
+                reviewRequests (first: 20) {
+                    nodes {
+                        requestedReviewer {
+                            ...on User {
+                                login
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

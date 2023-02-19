@@ -1,18 +1,20 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"strconv"
 
 	"github.com/kelseyhightower/envconfig"
 
 	"github.com/joho/godotenv"
 
+	"github.com/Khan/genqlient/graphql"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/machinebox/graphql"
 )
 
 func debug(msg string) {
@@ -32,7 +34,15 @@ func debug(msg string) {
 	}
 }
 
-var githubGraphqlClient = graphql.NewClient("https://api.github.com/graphql")
+type authedTransport struct {
+	key     string
+	wrapped http.RoundTripper
+}
+
+func (t *authedTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	req.Header.Set("Authorization", "bearer "+t.key)
+	return t.wrapped.RoundTrip(req)
+}
 
 type PullRequest struct {
 	id    string
@@ -199,39 +209,20 @@ func init() {
 
 	debug(fmt.Sprintf("%#v", env))
 
-	req := graphql.NewRequest(`{
-  repository(owner: "Ofadiman", name: "tui-code-review") {
-    id
-    pullRequests (first: 20) {
-      nodes {
-        isDraft
-        author {
-          login
-        }
-        createdAt
-        latestReviews (first: 20) {
-          nodes {
-            author {
-              login
-            }
-          }
-        }
-        title
-        reviewRequests (first: 20) {
-          nodes {
-            requestedReviewer {
-              ...on User {
-                login
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}`)
+	httpClient := http.Client{
+		Transport: &authedTransport{
+			key:     env.GitHubToken,
+			wrapped: http.DefaultTransport,
+		},
+	}
+	graphqlClient := graphql.NewClient("https://api.github.com/graphql", &httpClient)
 
-	req.Header.Set("Authorization", "Bearer ")
+	var response *getRepositoryInfoResponse
+	response, err = getRepositoryInfo(context.Background(), graphqlClient)
+	if err != nil {
+		panic(err)
+	}
+	debug(fmt.Sprintf("%#v", response))
 }
 
 func main() {
