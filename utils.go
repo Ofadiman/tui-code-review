@@ -7,16 +7,22 @@ import (
 	"time"
 )
 
-var now int64 = time.Now().Unix()
+var debug = Debug{
+	now: time.Now().Unix(),
+}
 
-func debug(label, msg string) {
+type Debug struct {
+	now int64
+}
+
+func (r Debug) msg(label, msg string) {
 	if _, err := os.Stat("logs"); os.IsNotExist(err) {
 		if err := os.Mkdir("logs", os.ModePerm); err != nil {
 			panic(err)
 		}
 	}
 
-	file, err := tea.LogToFile(fmt.Sprintf("logs/%v.log", now), "")
+	file, err := tea.LogToFile(fmt.Sprintf("logs/%v.log", r.now), "")
 	if err != nil {
 		panic(err)
 	}
@@ -30,4 +36,20 @@ func debug(label, msg string) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func (r Debug) GraphQL() string {
+	return "graphql"
+}
+
+func (r Debug) Error() string {
+	return "error"
+}
+
+func (r Debug) Environment() string {
+	return "environment"
+}
+
+func (r Debug) UI() string {
+	return "ui"
 }

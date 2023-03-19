@@ -144,7 +144,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			horizontalFrameSize, verticalFrameSize := defaultColumnStyle.GetFrameSize()
 			defaultColumnStyle.Width(msg.Width/2 - horizontalFrameSize)
 			activeColumnStyle.Width(msg.Width/2 - horizontalFrameSize)
-			debug("window width", strconv.Itoa(msg.Width))
+			debug.msg(debug.UI(), strconv.Itoa(msg.Width))
 
 			m.waiting.SetSize(msg.Width/2-horizontalFrameSize, msg.Height-verticalFrameSize)
 			m.waiting.SetShowHelp(false)
@@ -181,15 +181,15 @@ var env Env
 func init() {
 	err := godotenv.Load()
 	if err != nil {
-		debug("error", err.Error())
+		debug.msg(debug.GraphQL(), err.Error())
 	}
 
 	err = envconfig.Process("", &env)
 	if err != nil {
-		debug("error", err.Error())
+		debug.msg(debug.Error(), err.Error())
 	}
 
-	debug("environment variables", fmt.Sprintf("%#v", env))
+	debug.msg(debug.Environment(), fmt.Sprintf("%#v", env))
 
 	httpClient := http.Client{
 		Transport: &authedTransport{
@@ -204,7 +204,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	debug("graphql response", fmt.Sprintf("%#v", response))
+	debug.msg(debug.GraphQL(), fmt.Sprintf("%#v", response))
 }
 
 func main() {
