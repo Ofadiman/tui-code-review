@@ -53,3 +53,7 @@ func (r Debug) Environment() string {
 func (r Debug) UI() string {
 	return "ui"
 }
+
+func (r Debug) KeyPressed() string {
+	return "key pressed"
+}

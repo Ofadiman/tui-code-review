@@ -207,35 +207,61 @@ func init() {
 	debug.msg(debug.GraphQL(), fmt.Sprintf("%#v", response))
 }
 
-func main() {
-	model := &Model{
-		activeColumn: Waiting,
-		waiting: list.New([]list.Item{
-			&PullRequest{
-				id:    "db9eede3-0c80-456a-b323-e8c302506950",
-				title: "implement feature 1",
-			},
-			&PullRequest{
-				id:    "4c8e08dc-92da-4397-839a-2cad98706d3a",
-				title: "implement feature 2",
-			},
-			&PullRequest{
-				id:    "c0a9ebb2-9ff9-449e-86c0-c7313acc2591",
-				title: "implement feature 4",
-			},
-		}, list.NewDefaultDelegate(), 0, 0),
-		checked: list.New([]list.Item{
-			&PullRequest{
-				id:    "42660d9c-cabd-4372-968d-e68087e42c65",
-				title: "implement feature 3",
-			},
-			&PullRequest{
-				id:    "14d32ef4-043a-41ad-bcad-28b695248b3a",
-				title: "implement feature 5",
-			},
-		}, list.NewDefaultDelegate(), 0, 0),
+type RouterModel struct {
+	activeModel        string
+	settingsScreen     SettingsScreenModel
+	pullRequestsScreen PullRequestsScreenModel
+}
+
+func (r RouterModel) Init() tea.Cmd {
+	return nil
+}
+
+func (r RouterModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
+	if r.activeModel == "settings" {
+		_, cmd = r.settingsScreen.Update(msg)
+	} else {
+		_, cmd = r.pullRequestsScreen.Update(msg)
 	}
 
+	switch msg.(type) {
+	case tea.KeyMsg:
+		switch msg.(tea.KeyMsg).Type {
+		case tea.KeyCtrlS:
+			{
+				r.activeModel = "settings"
+				return r, cmd
+			}
+		case tea.KeyCtrlP:
+			{
+				r.activeModel = "pull_requests"
+				return r, cmd
+			}
+		case tea.KeyCtrlQ:
+			{
+				return r, tea.Quit
+			}
+		}
+	}
+
+	return r, cmd
+}
+
+func (r RouterModel) View() string {
+	if r.activeModel == "settings" {
+		return r.settingsScreen.View()
+	} else {
+		return r.pullRequestsScreen.View()
+	}
+}
+
+func main() {
+	model := RouterModel{
+		activeModel:        "pull_requests",
+		settingsScreen:     SettingsScreenModel{},
+		pullRequestsScreen: PullRequestsScreenModel{},
+	}
 	program := tea.NewProgram(model, tea.WithAltScreen())
 	if _, err := program.Run(); err != nil {
 		panic(err)
