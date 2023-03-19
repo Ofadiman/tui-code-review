@@ -1,6 +1,6 @@
 module github.com/ofadiman/tui-code-review
 
-go 1.19
+go 1.20
 
 require (
 	github.com/Khan/genqlient v0.5.0
