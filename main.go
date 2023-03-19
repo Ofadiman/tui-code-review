@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 
@@ -16,23 +15,6 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
-
-func debug(msg string) {
-	file, err := tea.LogToFile("debug.log", "")
-	if err != nil {
-		panic(err)
-	}
-
-	_, err = file.WriteString(msg + "\n")
-	if err != nil {
-		panic(err)
-	}
-
-	err = file.Close()
-	if err != nil {
-		panic(err)
-	}
-}
 
 type authedTransport struct {
 	key     string
@@ -162,7 +144,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			horizontalFrameSize, verticalFrameSize := defaultColumnStyle.GetFrameSize()
 			defaultColumnStyle.Width(msg.Width/2 - horizontalFrameSize)
 			activeColumnStyle.Width(msg.Width/2 - horizontalFrameSize)
-			debug(strconv.Itoa(msg.Width))
+			debug("window width", strconv.Itoa(msg.Width))
 
 			m.waiting.SetSize(msg.Width/2-horizontalFrameSize, msg.Height-verticalFrameSize)
 			m.waiting.SetShowHelp(false)
@@ -199,15 +181,15 @@ var env Env
 func init() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal(err.Error())
+		debug("error", err.Error())
 	}
 
 	err = envconfig.Process("", &env)
 	if err != nil {
-		log.Fatal(err.Error())
+		debug("error", err.Error())
 	}
 
-	debug(fmt.Sprintf("%#v", env))
+	debug("environment variables", fmt.Sprintf("%#v", env))
 
 	httpClient := http.Client{
 		Transport: &authedTransport{
@@ -222,7 +204,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	debug(fmt.Sprintf("%#v", response))
+	debug("graphql response", fmt.Sprintf("%#v", response))
 }
 
 func main() {
