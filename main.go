@@ -2,15 +2,13 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"github.com/Khan/genqlient/graphql"
 	"net/http"
+	"os"
 	"strconv"
 
-	"github.com/kelseyhightower/envconfig"
-
-	"github.com/joho/godotenv"
-
-	"github.com/Khan/genqlient/graphql"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -172,39 +170,7 @@ func (m *Model) View() string {
 	panic("invalid activeColumn value")
 }
 
-type Env struct {
-	GitHubToken string `envconfig:"GITHUB_TOKEN" required:"true"`
-}
-
-var env Env
-
 func init() {
-	err := godotenv.Load()
-	if err != nil {
-		debug.msg(debug.GraphQL(), err.Error())
-	}
-
-	err = envconfig.Process("", &env)
-	if err != nil {
-		debug.msg(debug.Error(), err.Error())
-	}
-
-	debug.msg(debug.Environment(), fmt.Sprintf("%#v", env))
-
-	httpClient := http.Client{
-		Transport: &authedTransport{
-			key:     env.GitHubToken,
-			wrapped: http.DefaultTransport,
-		},
-	}
-	graphqlClient := graphql.NewClient("https://api.github.com/graphql", &httpClient)
-
-	var response *getRepositoryInfoResponse
-	response, err = getRepositoryInfo(context.Background(), graphqlClient)
-	if err != nil {
-		panic(err)
-	}
-	debug.msg(debug.GraphQL(), fmt.Sprintf("%#v", response))
 }
 
 type RouterModel struct {
@@ -256,9 +222,71 @@ func (r RouterModel) View() string {
 	}
 }
 
+type Settings struct {
+	GithubToken string `json:"github_token,omitempty"`
+}
+
+const CONFIG_FILE_NAME = ".tui-code-review.json"
+
 func main() {
+	home, _ := os.UserHomeDir()
+	configFilePath := home + "/" + CONFIG_FILE_NAME
+	if _, err := os.Stat(configFilePath); err != nil {
+		if os.IsNotExist(err) {
+			if err = os.WriteFile(configFilePath, []byte("{}\n"), 0644); err != nil {
+				debug.msg(debug.FileSystem(), "could not write configuration file")
+				debug.msg(debug.Error(), err)
+				panic(err)
+			}
+		} else {
+			debug.msg(debug.FileSystem(), "could not stat configuration file")
+			debug.msg(debug.Error(), err)
+			panic(err)
+		}
+	}
+
+	file, err := os.ReadFile(configFilePath)
+	if err != nil {
+		debug.msg(debug.FileSystem(), "could not read configuration file")
+		debug.msg(debug.Error(), err)
+		panic(err)
+	}
+
+	var settings Settings
+	err = json.Unmarshal(file, &settings)
+	if err != nil {
+		debug.msg(debug.FileSystem(), "could not unmarshal configuration file")
+		debug.msg(debug.Error(), err.Error())
+		panic(err)
+	}
+	debug.msg(debug.FileSystem(), settings)
+
+	var activeModel string
+	if settings.GithubToken == "" {
+		activeModel = "settings"
+	} else {
+		activeModel = "pull_requests"
+	}
+
+	httpClient := http.Client{
+		Transport: &authedTransport{
+			key:     settings.GithubToken,
+			wrapped: http.DefaultTransport,
+		},
+	}
+	graphqlClient := graphql.NewClient("https://api.github.com/graphql", &httpClient)
+
+	var response *getRepositoryInfoResponse
+	response, err = getRepositoryInfo(context.Background(), graphqlClient)
+	if err != nil {
+		debug.msg(debug.GraphQL(), "could not fetch data from github")
+		debug.msg(debug.Error(), err.Error())
+		panic(err)
+	}
+	debug.msg(debug.GraphQL(), fmt.Sprintf("%#v", response))
+
 	model := RouterModel{
-		activeModel:        "pull_requests",
+		activeModel:        activeModel,
 		settingsScreen:     SettingsScreenModel{},
 		pullRequestsScreen: PullRequestsScreenModel{},
 	}
