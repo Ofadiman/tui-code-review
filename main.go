@@ -1,10 +1,8 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/Khan/genqlient/graphql"
 	"net/http"
 	"os"
 	"strconv"
@@ -215,8 +213,10 @@ func (r RouterModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		{
 			debug.msg(debug.UI(), fmt.Sprintf("window width is set to %v\n", strconv.Itoa(msg.Width)))
 			debug.msg(debug.UI(), fmt.Sprintf("window height is set to %v\n", strconv.Itoa(msg.Height)))
-			r.WindowWidth = msg.Width
-			r.WindowHeight = msg.Height
+			r.pullRequestsScreen.WindowWidth = msg.Width
+			r.pullRequestsScreen.WindowHeight = msg.Height
+			r.settingsScreen.WindowWidth = msg.Width
+			r.settingsScreen.WindowHeight = msg.Height
 		}
 	}
 
@@ -277,22 +277,22 @@ func main() {
 		activeModel = "pull_requests"
 	}
 
-	httpClient := http.Client{
-		Transport: &authedTransport{
-			key:     settings.GithubToken,
-			wrapped: http.DefaultTransport,
-		},
-	}
-	graphqlClient := graphql.NewClient("https://api.github.com/graphql", &httpClient)
+	//httpClient := http.Client{
+	//	Transport: &authedTransport{
+	//		key:     settings.GithubToken,
+	//		wrapped: http.DefaultTransport,
+	//	},
+	//}
+	//graphqlClient := graphql.NewClient("https://api.github.com/graphql", &httpClient)
 
-	var response *getRepositoryInfoResponse
-	response, err = getRepositoryInfo(context.Background(), graphqlClient)
-	if err != nil {
-		debug.msg(debug.GraphQL(), "could not fetch data from github")
-		debug.msg(debug.Error(), err.Error())
-		panic(err)
-	}
-	debug.msg(debug.GraphQL(), fmt.Sprintf("%#v", response))
+	//var response *getRepositoryInfoResponse
+	//response, err = getRepositoryInfo(context.Background(), graphqlClient)
+	//if err != nil {
+	//	debug.msg(debug.GraphQL(), "could not fetch data from github")
+	//	debug.msg(debug.Error(), err.Error())
+	//	panic(err)
+	//}
+	//debug.msg(debug.GraphQL(), fmt.Sprintf("%#v", response))
 
 	model := RouterModel{
 		activeModel:        activeModel,

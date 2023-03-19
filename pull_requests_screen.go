@@ -3,6 +3,8 @@ package main
 import tea "github.com/charmbracelet/bubbletea"
 
 type PullRequestsScreenModel struct {
+	WindowWidth  int
+	WindowHeight int
 }
 
 func (r *PullRequestsScreenModel) Init() tea.Cmd {

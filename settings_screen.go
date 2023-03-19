@@ -5,6 +5,8 @@ import (
 )
 
 type SettingsScreenModel struct {
+	WindowWidth  int
+	WindowHeight int
 }
 
 func (r *SettingsScreenModel) Init() tea.Cmd {
