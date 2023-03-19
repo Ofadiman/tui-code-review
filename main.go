@@ -177,6 +177,8 @@ type RouterModel struct {
 	activeModel        string
 	settingsScreen     SettingsScreenModel
 	pullRequestsScreen PullRequestsScreenModel
+	WindowWidth        int
+	WindowHeight       int
 }
 
 func (r RouterModel) Init() tea.Cmd {
@@ -191,9 +193,9 @@ func (r RouterModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		_, cmd = r.pullRequestsScreen.Update(msg)
 	}
 
-	switch msg.(type) {
+	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		switch msg.(tea.KeyMsg).Type {
+		switch msg.Type {
 		case tea.KeyCtrlS:
 			{
 				r.activeModel = "settings"
@@ -208,6 +210,13 @@ func (r RouterModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			{
 				return r, tea.Quit
 			}
+		}
+	case tea.WindowSizeMsg:
+		{
+			debug.msg(debug.UI(), fmt.Sprintf("window width is set to %v\n", strconv.Itoa(msg.Width)))
+			debug.msg(debug.UI(), fmt.Sprintf("window height is set to %v\n", strconv.Itoa(msg.Height)))
+			r.WindowWidth = msg.Width
+			r.WindowHeight = msg.Height
 		}
 	}
 
