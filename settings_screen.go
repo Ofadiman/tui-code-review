@@ -16,9 +16,10 @@ const (
 )
 
 type SettingsScreenModel struct {
-	TextInput   textinput.Model
-	state       state
-	GlobalState *GlobalState
+	TextInput textinput.Model
+	state     state
+	*GlobalState
+	*Settings
 }
 
 func NewSettingsScreenModel() *SettingsScreenModel {
@@ -39,6 +40,12 @@ func (r *SettingsScreenModel) WithGlobalState(globalState *GlobalState) *Setting
 	return r
 }
 
+func (r *SettingsScreenModel) WithSettings(settings *Settings) *SettingsScreenModel {
+	r.Settings = settings
+
+	return r
+}
+
 func (r *SettingsScreenModel) Init() tea.Cmd {
 	return nil
 }
@@ -53,6 +60,7 @@ func (r *SettingsScreenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case tea.KeyEscape:
 				{
 					debug.msg(debug.KeyPressed(), "escape")
+
 					if r.state == ADD_GITHUB_TOKEN || r.state == ADD_GITHUB_REPOSITORY {
 						r.state = DEFAULT
 						r.TextInput.Reset()
@@ -61,11 +69,13 @@ func (r *SettingsScreenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case tea.KeyCtrlU:
 				{
 					debug.msg(debug.KeyPressed(), "ctrl + U")
+
 					r.state = ADD_GITHUB_TOKEN
 				}
 			case tea.KeyCtrlR:
 				{
 					debug.msg(debug.KeyPressed(), "ctrl + R")
+
 					r.state = ADD_GITHUB_REPOSITORY
 				}
 			case tea.KeyEnter:

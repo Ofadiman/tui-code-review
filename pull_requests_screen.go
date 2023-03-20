@@ -13,7 +13,8 @@ var roundedBorder = lipgloss.RoundedBorder()
 var columnStyle = lipgloss.NewStyle().Border(roundedBorder).BorderForeground(lipgloss.Color("63"))
 
 type PullRequestsScreenModel struct {
-	GlobalState *GlobalState
+	*GlobalState
+	*Settings
 }
 
 func NewPullRequestsScreenModel() *PullRequestsScreenModel {
@@ -22,6 +23,12 @@ func NewPullRequestsScreenModel() *PullRequestsScreenModel {
 
 func (r *PullRequestsScreenModel) WithGlobalState(globalState *GlobalState) *PullRequestsScreenModel {
 	r.GlobalState = globalState
+
+	return r
+}
+
+func (r *PullRequestsScreenModel) WithSettings(settings *Settings) *PullRequestsScreenModel {
+	r.Settings = settings
 
 	return r
 }

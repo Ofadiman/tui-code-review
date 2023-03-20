@@ -178,10 +178,11 @@ func NewGlobalState() *GlobalState {
 }
 
 type RouterModel struct {
-	activeModel             string
-	SettingsScreenModel     *SettingsScreenModel
-	PullRequestsScreenModel *PullRequestsScreenModel
-	GlobalState             *GlobalState
+	activeModel string
+	*SettingsScreenModel
+	*PullRequestsScreenModel
+	*GlobalState
+	*Settings
 }
 
 func NewRouterModel() *RouterModel {
@@ -207,6 +208,12 @@ func (r *RouterModel) WithSettingsScreenModel(model *SettingsScreenModel) *Route
 
 func (r *RouterModel) WithPullRequestsScreenModel(model *PullRequestsScreenModel) *RouterModel {
 	r.PullRequestsScreenModel = model
+
+	return r
+}
+
+func (r *RouterModel) WithSettings(settings *Settings) *RouterModel {
+	r.Settings = settings
 
 	return r
 }
@@ -262,43 +269,63 @@ func (r *RouterModel) View() string {
 }
 
 type Settings struct {
-	GithubToken string `json:"github_token,omitempty"`
+	GithubToken    string   `json:"github_token,omitempty"`
+	Repositories   []string `json:"repositories,omitempty"`
+	ConfigFilePath string
 }
 
-const CONFIG_FILE_NAME = ".tui-code-review.json"
-
-func main() {
+func NewSettings() *Settings {
 	home, _ := os.UserHomeDir()
-	configFilePath := home + "/" + CONFIG_FILE_NAME
-	if _, err := os.Stat(configFilePath); err != nil {
+
+	return &Settings{
+		ConfigFilePath: home + "/" + ".tui-code-review.json",
+	}
+}
+
+func (r *Settings) Load() {
+	_, err := os.Stat(r.ConfigFilePath)
+	if err != nil {
 		if os.IsNotExist(err) {
-			if err = os.WriteFile(configFilePath, []byte("{}\n"), 0644); err != nil {
-				debug.msg(debug.FileSystem(), "could not write configuration file")
-				debug.msg(debug.Error(), err)
-				panic(err)
-			}
+			r.Save()
 		} else {
 			debug.msg(debug.FileSystem(), "could not stat configuration file")
-			debug.msg(debug.Error(), err)
+			debug.msg(debug.Error(), err.Error())
 			panic(err)
 		}
 	}
 
-	file, err := os.ReadFile(configFilePath)
+	bytes, err := os.ReadFile(r.ConfigFilePath)
 	if err != nil {
-		debug.msg(debug.FileSystem(), "could not read configuration file")
-		debug.msg(debug.Error(), err)
 		panic(err)
 	}
 
-	var settings Settings
-	err = json.Unmarshal(file, &settings)
+	err = json.Unmarshal(bytes, r)
 	if err != nil {
 		debug.msg(debug.FileSystem(), "could not unmarshal configuration file")
 		debug.msg(debug.Error(), err.Error())
 		panic(err)
 	}
-	debug.msg(debug.FileSystem(), settings)
+
+	debug.msg(debug.FileSystem(), r)
+}
+
+func (r *Settings) Save() {
+	bytes, err := json.Marshal(r)
+	if err != nil {
+		debug.msg(debug.FileSystem(), "could not stat configuration file")
+		debug.msg(debug.Error(), err)
+		panic(err)
+	}
+
+	err = os.WriteFile(r.ConfigFilePath, bytes, 0644)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func main() {
+	settings := NewSettings()
+	settings.Load()
 
 	//httpClient := http.Client{
 	//	Transport: &authedTransport{
@@ -318,9 +345,17 @@ func main() {
 	//debug.msg(debug.GraphQL(), fmt.Sprintf("%#v", response))
 
 	globalState := NewGlobalState()
-	settingsScreen := NewSettingsScreenModel().WithGlobalState(globalState)
-	pullRequestsScreenModel := NewPullRequestsScreenModel().WithGlobalState(globalState)
-	routerModel := NewRouterModel().WithGlobalState(globalState).WithSettingsScreenModel(settingsScreen).WithPullRequestsScreenModel(pullRequestsScreenModel)
+	settingsScreen := NewSettingsScreenModel().
+		WithSettings(settings).
+		WithGlobalState(globalState)
+	pullRequestsScreenModel := NewPullRequestsScreenModel().
+		WithSettings(settings).
+		WithGlobalState(globalState)
+	routerModel := NewRouterModel().
+		WithSettings(settings).
+		WithGlobalState(globalState).
+		WithSettingsScreenModel(settingsScreen).
+		WithPullRequestsScreenModel(pullRequestsScreenModel)
 	routerModel.activeModel = "settings"
 
 	program := tea.NewProgram(routerModel, tea.WithAltScreen())
