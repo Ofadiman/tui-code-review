@@ -13,8 +13,17 @@ var roundedBorder = lipgloss.RoundedBorder()
 var columnStyle = lipgloss.NewStyle().Border(roundedBorder).BorderForeground(lipgloss.Color("63"))
 
 type PullRequestsScreenModel struct {
-	WindowWidth  int
-	WindowHeight int
+	GlobalState *GlobalState
+}
+
+func NewPullRequestsScreenModel() *PullRequestsScreenModel {
+	return &PullRequestsScreenModel{}
+}
+
+func (r *PullRequestsScreenModel) WithGlobalState(globalState *GlobalState) *PullRequestsScreenModel {
+	r.GlobalState = globalState
+
+	return r
 }
 
 func (r *PullRequestsScreenModel) Init() tea.Cmd {
@@ -39,11 +48,11 @@ func (r *PullRequestsScreenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (r *PullRequestsScreenModel) View() string {
-	columnStyle.Width(r.WindowWidth - roundedBorder.GetLeftSize() - roundedBorder.GetRightSize())
+	columnStyle.Width(r.GlobalState.WindowWidth - roundedBorder.GetLeftSize() - roundedBorder.GetRightSize())
 	header := columnStyle.Render("renders pull requests screen")
 	lorem := "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
 
-	f := wordwrap.NewWriter(r.WindowWidth - roundedBorder.GetLeftSize() - roundedBorder.GetRightSize())
+	f := wordwrap.NewWriter(r.GlobalState.WindowWidth - roundedBorder.GetLeftSize() - roundedBorder.GetRightSize())
 	f.Breakpoints = []rune{' '}
 	_, err := f.Write([]byte(lorem))
 	if err != nil {

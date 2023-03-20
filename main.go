@@ -168,27 +168,59 @@ func (m *Model) View() string {
 	panic("invalid activeColumn value")
 }
 
-func init() {
+type GlobalState struct {
+	WindowWidth  int
+	WindowHeight int
+}
+
+func NewGlobalState() *GlobalState {
+	return &GlobalState{}
 }
 
 type RouterModel struct {
-	activeModel        string
-	settingsScreen     SettingsScreenModel
-	pullRequestsScreen PullRequestsScreenModel
-	WindowWidth        int
-	WindowHeight       int
+	activeModel             string
+	SettingsScreenModel     *SettingsScreenModel
+	PullRequestsScreenModel *PullRequestsScreenModel
+	GlobalState             *GlobalState
 }
 
-func (r RouterModel) Init() tea.Cmd {
+func NewRouterModel() *RouterModel {
+	return &RouterModel{
+		activeModel:             "",
+		SettingsScreenModel:     nil,
+		PullRequestsScreenModel: nil,
+		GlobalState:             nil,
+	}
+}
+
+func (r *RouterModel) WithGlobalState(globalState *GlobalState) *RouterModel {
+	r.GlobalState = globalState
+
+	return r
+}
+
+func (r *RouterModel) WithSettingsScreenModel(model *SettingsScreenModel) *RouterModel {
+	r.SettingsScreenModel = model
+
+	return r
+}
+
+func (r *RouterModel) WithPullRequestsScreenModel(model *PullRequestsScreenModel) *RouterModel {
+	r.PullRequestsScreenModel = model
+
+	return r
+}
+
+func (r *RouterModel) Init() tea.Cmd {
 	return nil
 }
 
-func (r RouterModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (r *RouterModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	if r.activeModel == "settings" {
-		_, cmd = r.settingsScreen.Update(msg)
+		_, cmd = r.SettingsScreenModel.Update(msg)
 	} else {
-		_, cmd = r.pullRequestsScreen.Update(msg)
+		_, cmd = r.PullRequestsScreenModel.Update(msg)
 	}
 
 	switch msg := msg.(type) {
@@ -213,21 +245,19 @@ func (r RouterModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		{
 			debug.msg(debug.UI(), fmt.Sprintf("window width is set to %v\n", strconv.Itoa(msg.Width)))
 			debug.msg(debug.UI(), fmt.Sprintf("window height is set to %v\n", strconv.Itoa(msg.Height)))
-			r.pullRequestsScreen.WindowWidth = msg.Width
-			r.pullRequestsScreen.WindowHeight = msg.Height
-			r.settingsScreen.WindowWidth = msg.Width
-			r.settingsScreen.WindowHeight = msg.Height
+			r.GlobalState.WindowHeight = msg.Height
+			r.GlobalState.WindowWidth = msg.Width
 		}
 	}
 
 	return r, cmd
 }
 
-func (r RouterModel) View() string {
+func (r *RouterModel) View() string {
 	if r.activeModel == "settings" {
-		return r.settingsScreen.View()
+		return r.SettingsScreenModel.View()
 	} else {
-		return r.pullRequestsScreen.View()
+		return r.PullRequestsScreenModel.View()
 	}
 }
 
@@ -270,13 +300,6 @@ func main() {
 	}
 	debug.msg(debug.FileSystem(), settings)
 
-	var activeModel string
-	if settings.GithubToken == "" {
-		activeModel = "settings"
-	} else {
-		activeModel = "pull_requests"
-	}
-
 	//httpClient := http.Client{
 	//	Transport: &authedTransport{
 	//		key:     settings.GithubToken,
@@ -294,12 +317,13 @@ func main() {
 	//}
 	//debug.msg(debug.GraphQL(), fmt.Sprintf("%#v", response))
 
-	model := RouterModel{
-		activeModel:        activeModel,
-		settingsScreen:     SettingsScreenModel{},
-		pullRequestsScreen: PullRequestsScreenModel{},
-	}
-	program := tea.NewProgram(model, tea.WithAltScreen())
+	globalState := NewGlobalState()
+	settingsScreen := NewSettingsScreenModel().WithGlobalState(globalState)
+	pullRequestsScreenModel := NewPullRequestsScreenModel().WithGlobalState(globalState)
+	routerModel := NewRouterModel().WithGlobalState(globalState).WithSettingsScreenModel(settingsScreen).WithPullRequestsScreenModel(pullRequestsScreenModel)
+	routerModel.activeModel = "settings"
+
+	program := tea.NewProgram(routerModel, tea.WithAltScreen())
 	if _, err := program.Run(); err != nil {
 		panic(err)
 	}
