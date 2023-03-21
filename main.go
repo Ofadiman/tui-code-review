@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/ofadiman/tui-code-review/log"
 	"net/http"
 	"os"
 	"strconv"
@@ -140,7 +141,6 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			horizontalFrameSize, verticalFrameSize := defaultColumnStyle.GetFrameSize()
 			defaultColumnStyle.Width(msg.Width/2 - horizontalFrameSize)
 			activeColumnStyle.Width(msg.Width/2 - horizontalFrameSize)
-			debug.msg(debug.UI(), strconv.Itoa(msg.Width))
 
 			m.waiting.SetSize(msg.Width/2-horizontalFrameSize, msg.Height-verticalFrameSize)
 			m.waiting.SetShowHelp(false)
@@ -183,6 +183,7 @@ type RouterModel struct {
 	*PullRequestsScreenModel
 	*GlobalState
 	*Settings
+	*log.Logger
 }
 
 func NewRouterModel() *RouterModel {
@@ -214,6 +215,12 @@ func (r *RouterModel) WithPullRequestsScreenModel(model *PullRequestsScreenModel
 
 func (r *RouterModel) WithSettings(settings *Settings) *RouterModel {
 	r.Settings = settings
+
+	return r
+}
+
+func (r *RouterModel) WithLogger(logger *log.Logger) *RouterModel {
+	r.Logger = logger
 
 	return r
 }
@@ -250,8 +257,8 @@ func (r *RouterModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case tea.WindowSizeMsg:
 		{
-			debug.msg(debug.UI(), fmt.Sprintf("window width is set to %v\n", strconv.Itoa(msg.Width)))
-			debug.msg(debug.UI(), fmt.Sprintf("window height is set to %v\n", strconv.Itoa(msg.Height)))
+			r.Logger.Info(fmt.Sprintf("window width is set to %v", strconv.Itoa(msg.Width)))
+			r.Logger.Info(fmt.Sprintf("window height is set to %v", strconv.Itoa(msg.Height)))
 			r.GlobalState.WindowHeight = msg.Height
 			r.GlobalState.WindowWidth = msg.Width
 		}
@@ -272,6 +279,7 @@ type Settings struct {
 	GithubToken    string   `json:"github_token,omitempty"`
 	Repositories   []string `json:"repositories,omitempty"`
 	ConfigFilePath string
+	*log.Logger
 }
 
 func NewSettings() *Settings {
@@ -288,8 +296,8 @@ func (r *Settings) Load() {
 		if os.IsNotExist(err) {
 			r.Save()
 		} else {
-			debug.msg(debug.FileSystem(), "could not stat configuration file")
-			debug.msg(debug.Error(), err.Error())
+			r.Logger.Info("could not stat configuration file")
+			r.Logger.Error(err)
 			panic(err)
 		}
 	}
@@ -301,19 +309,19 @@ func (r *Settings) Load() {
 
 	err = json.Unmarshal(bytes, r)
 	if err != nil {
-		debug.msg(debug.FileSystem(), "could not unmarshal configuration file")
-		debug.msg(debug.Error(), err.Error())
+		r.Logger.Info("could not unmarshal configuration file")
+		r.Logger.Error(err)
 		panic(err)
 	}
 
-	debug.msg(debug.FileSystem(), r)
+	r.Logger.Struct(r)
 }
 
 func (r *Settings) Save() {
 	bytes, err := json.Marshal(r)
 	if err != nil {
-		debug.msg(debug.FileSystem(), "could not stat configuration file")
-		debug.msg(debug.Error(), err)
+		r.Logger.Info("could not stat configuration file")
+		r.Logger.Error(err)
 		panic(err)
 	}
 
@@ -323,8 +331,16 @@ func (r *Settings) Save() {
 	}
 }
 
+func (r *Settings) WithLogger(logger *log.Logger) *Settings {
+	r.Logger = logger
+
+	return r
+}
+
 func main() {
-	settings := NewSettings()
+	logger := log.NewLogger()
+	settings := NewSettings().WithLogger(logger)
+
 	settings.Load()
 
 	//httpClient := http.Client{
@@ -347,15 +363,18 @@ func main() {
 	globalState := NewGlobalState()
 	settingsScreen := NewSettingsScreenModel().
 		WithSettings(settings).
-		WithGlobalState(globalState)
+		WithGlobalState(globalState).
+		WithLogger(logger)
 	pullRequestsScreenModel := NewPullRequestsScreenModel().
 		WithSettings(settings).
-		WithGlobalState(globalState)
+		WithGlobalState(globalState).
+		WithLogger(logger)
 	routerModel := NewRouterModel().
 		WithSettings(settings).
 		WithGlobalState(globalState).
 		WithSettingsScreenModel(settingsScreen).
-		WithPullRequestsScreenModel(pullRequestsScreenModel)
+		WithPullRequestsScreenModel(pullRequestsScreenModel).
+		WithLogger(logger)
 	routerModel.activeModel = "settings"
 
 	program := tea.NewProgram(routerModel, tea.WithAltScreen())

@@ -5,6 +5,7 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/ofadiman/tui-code-review/log"
 )
 
 type state string
@@ -20,6 +21,7 @@ type SettingsScreenModel struct {
 	state     state
 	*GlobalState
 	*Settings
+	*log.Logger
 }
 
 func NewSettingsScreenModel() *SettingsScreenModel {
@@ -46,6 +48,12 @@ func (r *SettingsScreenModel) WithSettings(settings *Settings) *SettingsScreenMo
 	return r
 }
 
+func (r *SettingsScreenModel) WithLogger(logger *log.Logger) *SettingsScreenModel {
+	r.Logger = logger
+
+	return r
+}
+
 func (r *SettingsScreenModel) Init() tea.Cmd {
 	return nil
 }
@@ -59,7 +67,7 @@ func (r *SettingsScreenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch msg.Type {
 			case tea.KeyEscape:
 				{
-					debug.msg(debug.KeyPressed(), "escape")
+					r.Logger.KeyPress("escape")
 
 					if r.state == ADD_GITHUB_TOKEN || r.state == ADD_GITHUB_REPOSITORY {
 						r.state = DEFAULT
@@ -68,24 +76,25 @@ func (r *SettingsScreenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			case tea.KeyCtrlU:
 				{
-					debug.msg(debug.KeyPressed(), "ctrl + U")
+					r.Logger.KeyPress("ctrl + u")
 
 					r.state = ADD_GITHUB_TOKEN
 				}
 			case tea.KeyCtrlR:
 				{
-					debug.msg(debug.KeyPressed(), "ctrl + R")
+					r.Logger.KeyPress("ctrl + r")
 
 					r.state = ADD_GITHUB_REPOSITORY
 				}
 			case tea.KeyEnter:
 				{
-					debug.msg(debug.KeyPressed(), "enter")
+					r.Logger.KeyPress("enter")
 
 					switch r.state {
 					case ADD_GITHUB_TOKEN:
 						{
-							debug.msg(debug.UI(), "current state is ADD_GITHUB_TOKEN")
+							r.Logger.Info(fmt.Sprintf("current input value %v", r.TextInput.Value()))
+
 							if r.TextInput.Value() != "" {
 								r.TextInput.Reset()
 							}
@@ -94,7 +103,8 @@ func (r *SettingsScreenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						}
 					case ADD_GITHUB_REPOSITORY:
 						{
-							debug.msg(debug.UI(), "current state is ADD_GITHUB_REPOSITORY")
+							r.Logger.Info(fmt.Sprintf("current input value %v", r.TextInput.Value()))
+
 							if r.TextInput.Value() != "" {
 								r.TextInput.Reset()
 							}
@@ -110,12 +120,10 @@ func (r *SettingsScreenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	r.TextInput, cmd = r.TextInput.Update(msg)
 
-	debug.msg(debug.UI(), r.TextInput.Value())
-
 	return r, cmd
 }
 
-const HELP = "ctrl+q quit, ctrl+g update github token, ctrl+r add github repository"
+const HELP = "ctrl+q quit, ctrl+u update github token, ctrl+r add github repository"
 
 func (r *SettingsScreenModel) View() string {
 	if r.state == ADD_GITHUB_TOKEN || r.state == ADD_GITHUB_REPOSITORY {

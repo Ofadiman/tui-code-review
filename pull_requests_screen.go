@@ -6,6 +6,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/muesli/reflow/padding"
 	"github.com/muesli/reflow/wordwrap"
+	"github.com/ofadiman/tui-code-review/log"
 	"strings"
 )
 
@@ -15,6 +16,7 @@ var columnStyle = lipgloss.NewStyle().Border(roundedBorder).BorderForeground(lip
 type PullRequestsScreenModel struct {
 	*GlobalState
 	*Settings
+	*log.Logger
 }
 
 func NewPullRequestsScreenModel() *PullRequestsScreenModel {
@@ -33,6 +35,12 @@ func (r *PullRequestsScreenModel) WithSettings(settings *Settings) *PullRequests
 	return r
 }
 
+func (r *PullRequestsScreenModel) WithLogger(logger *log.Logger) *PullRequestsScreenModel {
+	r.Logger = logger
+
+	return r
+}
+
 func (r *PullRequestsScreenModel) Init() tea.Cmd {
 	return nil
 }
@@ -44,7 +52,7 @@ func (r *PullRequestsScreenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch msg.String() {
 			case "s":
 				{
-					debug.msg(debug.KeyPressed(), "s")
+					r.Logger.KeyPress("s")
 					return r, nil
 				}
 			}
@@ -63,7 +71,7 @@ func (r *PullRequestsScreenModel) View() string {
 	f.Breakpoints = []rune{' '}
 	_, err := f.Write([]byte(lorem))
 	if err != nil {
-		debug.msg(debug.Error(), err.Error())
+		r.Logger.Error(err)
 	}
 
 	help := []struct {
