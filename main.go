@@ -342,6 +342,11 @@ func (r *Settings) UpdateGitHubToken(token string) {
 	r.Save()
 }
 
+func (r *Settings) AddRepositoryUrl(repositoryUrl string) {
+	r.Repositories = append(r.Repositories, repositoryUrl)
+	r.Save()
+}
+
 func main() {
 	logger := log.NewLogger()
 	settings := NewSettings().WithLogger(logger)

@@ -107,6 +107,8 @@ func (r *SettingsScreenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						{
 							r.Logger.Info(fmt.Sprintf("current input value %v", r.TextInput.Value()))
 
+							r.Settings.AddRepositoryUrl(r.TextInput.Value())
+
 							if r.TextInput.Value() != "" {
 								r.TextInput.Reset()
 							}
