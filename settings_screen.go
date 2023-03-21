@@ -6,6 +6,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/ofadiman/tui-code-review/log"
+	"github.com/ofadiman/tui-code-review/settings"
 )
 
 type state string
@@ -20,7 +21,7 @@ type SettingsScreenModel struct {
 	TextInput textinput.Model
 	state     state
 	*GlobalState
-	*Settings
+	*settings.Settings
 	*log.Logger
 }
 
@@ -42,7 +43,7 @@ func (r *SettingsScreenModel) WithGlobalState(globalState *GlobalState) *Setting
 	return r
 }
 
-func (r *SettingsScreenModel) WithSettings(settings *Settings) *SettingsScreenModel {
+func (r *SettingsScreenModel) WithSettings(settings *settings.Settings) *SettingsScreenModel {
 	r.Settings = settings
 
 	return r

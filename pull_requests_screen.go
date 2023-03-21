@@ -7,6 +7,7 @@ import (
 	"github.com/muesli/reflow/padding"
 	"github.com/muesli/reflow/wordwrap"
 	"github.com/ofadiman/tui-code-review/log"
+	"github.com/ofadiman/tui-code-review/settings"
 	"strings"
 )
 
@@ -15,7 +16,7 @@ var columnStyle = lipgloss.NewStyle().Border(roundedBorder).BorderForeground(lip
 
 type PullRequestsScreenModel struct {
 	*GlobalState
-	*Settings
+	*settings.Settings
 	*log.Logger
 }
 
@@ -29,7 +30,7 @@ func (r *PullRequestsScreenModel) WithGlobalState(globalState *GlobalState) *Pul
 	return r
 }
 
-func (r *PullRequestsScreenModel) WithSettings(settings *Settings) *PullRequestsScreenModel {
+func (r *PullRequestsScreenModel) WithSettings(settings *settings.Settings) *PullRequestsScreenModel {
 	r.Settings = settings
 
 	return r
