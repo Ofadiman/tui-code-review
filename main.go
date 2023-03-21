@@ -337,6 +337,11 @@ func (r *Settings) WithLogger(logger *log.Logger) *Settings {
 	return r
 }
 
+func (r *Settings) UpdateGitHubToken(token string) {
+	r.GithubToken = token
+	r.Save()
+}
+
 func main() {
 	logger := log.NewLogger()
 	settings := NewSettings().WithLogger(logger)
