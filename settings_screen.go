@@ -66,12 +66,11 @@ func (r *SettingsScreenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		{
+			r.Logger.KeyPress(msg.String())
 
 			switch msg.String() {
 			case "j":
 				{
-					r.Logger.KeyPress("j")
-
 					if r.SelectedRepositoryIndex == len(r.Repositories)-1 {
 						r.SelectedRepositoryIndex = 0
 					} else {
@@ -80,8 +79,6 @@ func (r *SettingsScreenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			case "k":
 				{
-					r.Logger.KeyPress("k")
-
 					if r.SelectedRepositoryIndex == 0 {
 						r.SelectedRepositoryIndex = len(r.Repositories) - 1
 					} else {
@@ -90,8 +87,6 @@ func (r *SettingsScreenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			case "escape":
 				{
-					r.Logger.KeyPress("escape")
-
 					if r.state == ADD_GITHUB_TOKEN || r.state == ADD_GITHUB_REPOSITORY {
 						r.state = DEFAULT
 						r.TextInput.Reset()
@@ -99,14 +94,10 @@ func (r *SettingsScreenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			case "ctrl+u":
 				{
-					r.Logger.KeyPress("ctrl + u")
-
 					r.state = ADD_GITHUB_TOKEN
 				}
 			case "ctrl+r":
 				{
-					r.Logger.KeyPress("ctrl + r")
-
 					r.state = ADD_GITHUB_REPOSITORY
 				}
 			case "delete":
@@ -115,8 +106,6 @@ func (r *SettingsScreenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			case "enter":
 				{
-					r.Logger.KeyPress("enter")
-
 					switch r.state {
 					case ADD_GITHUB_TOKEN:
 						{
