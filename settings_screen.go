@@ -149,7 +149,9 @@ func (r *SettingsScreenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	r.TextInput, cmd = r.TextInput.Update(msg)
+	if r.state == ADD_GITHUB_TOKEN || r.state == ADD_GITHUB_REPOSITORY {
+		r.TextInput, cmd = r.TextInput.Update(msg)
+	}
 
 	return r, cmd
 }
