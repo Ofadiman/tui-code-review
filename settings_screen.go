@@ -18,8 +18,9 @@ const (
 )
 
 type SettingsScreenModel struct {
-	TextInput textinput.Model
-	state     state
+	TextInput               textinput.Model
+	state                   state
+	SelectedRepositoryIndex int
 	*GlobalState
 	*settings.Settings
 	*log.Logger
@@ -65,8 +66,29 @@ func (r *SettingsScreenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		{
-			switch msg.Type {
-			case tea.KeyEscape:
+
+			switch msg.String() {
+			case "j":
+				{
+					r.Logger.KeyPress("j")
+
+					if r.SelectedRepositoryIndex == len(r.Repositories)-1 {
+						r.SelectedRepositoryIndex = 0
+					} else {
+						r.SelectedRepositoryIndex = r.SelectedRepositoryIndex + 1
+					}
+				}
+			case "k":
+				{
+					r.Logger.KeyPress("k")
+
+					if r.SelectedRepositoryIndex == 0 {
+						r.SelectedRepositoryIndex = len(r.Repositories) - 1
+					} else {
+						r.SelectedRepositoryIndex = r.SelectedRepositoryIndex - 1
+					}
+				}
+			case "escape":
 				{
 					r.Logger.KeyPress("escape")
 
@@ -75,19 +97,19 @@ func (r *SettingsScreenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						r.TextInput.Reset()
 					}
 				}
-			case tea.KeyCtrlU:
+			case "ctrl+u":
 				{
 					r.Logger.KeyPress("ctrl + u")
 
 					r.state = ADD_GITHUB_TOKEN
 				}
-			case tea.KeyCtrlR:
+			case "ctrl+r":
 				{
 					r.Logger.KeyPress("ctrl + r")
 
 					r.state = ADD_GITHUB_REPOSITORY
 				}
-			case tea.KeyEnter:
+			case "enter":
 				{
 					r.Logger.KeyPress("enter")
 
@@ -138,5 +160,19 @@ func (r *SettingsScreenModel) View() string {
 			"(esc to quit)") + "\n"
 	}
 
-	return lipgloss.JoinVertical(lipgloss.Left, "renders settings screen", HELP)
+	repositories := ""
+
+	s := lipgloss.NewStyle()
+	x := lipgloss.NewStyle().Inherit(s).Underline(true)
+	for index, url := range r.Settings.Repositories {
+		if index == r.SelectedRepositoryIndex {
+			repositories += x.Render(url)
+			repositories += "\n"
+		} else {
+			repositories += s.Render(url)
+			repositories += "\n"
+		}
+	}
+
+	return lipgloss.JoinVertical(lipgloss.Left, "renders settings screen\n", repositories, HELP)
 }
