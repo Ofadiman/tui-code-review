@@ -109,6 +109,10 @@ func (r *SettingsScreenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 					r.state = ADD_GITHUB_REPOSITORY
 				}
+			case "delete":
+				{
+					r.Settings.DeleteRepositoryUrl(r.Settings.Repositories[r.SelectedRepositoryIndex])
+				}
 			case "enter":
 				{
 					r.Logger.KeyPress("enter")
@@ -150,7 +154,7 @@ func (r *SettingsScreenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return r, cmd
 }
 
-const HELP = "ctrl+q quit, ctrl+u update github token, ctrl+r add github repository"
+const HELP = "ctrl+q quit, ctrl+u update github token, ctrl+r add github repository delete delete selected repository"
 
 func (r *SettingsScreenModel) View() string {
 	if r.state == ADD_GITHUB_TOKEN || r.state == ADD_GITHUB_REPOSITORY {

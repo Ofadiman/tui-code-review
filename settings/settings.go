@@ -77,3 +77,16 @@ func (r *Settings) AddRepositoryUrl(repositoryUrl string) {
 	r.Repositories = append(r.Repositories, repositoryUrl)
 	r.Save()
 }
+
+func (r *Settings) DeleteRepositoryUrl(repositoryUrl string) {
+	var updatedRepositories []string
+	for _, url := range r.Repositories {
+		if url == repositoryUrl {
+			continue
+		}
+
+		updatedRepositories = append(updatedRepositories, url)
+	}
+
+	r.Repositories = updatedRepositories
+}
