@@ -148,11 +148,20 @@ func (r *SettingsScreenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 const HELP = "ctrl+q quit, ctrl+u update github token, ctrl+r add github repository delete delete selected repository"
 
 func (r *SettingsScreenModel) View() string {
-	if r.state == ADD_GITHUB_TOKEN || r.state == ADD_GITHUB_REPOSITORY {
-		return fmt.Sprintf(
+	c := lipgloss.NewStyle().PaddingTop(1).PaddingBottom(1).PaddingLeft(2).PaddingRight(2)
+
+	if r.state == ADD_GITHUB_TOKEN {
+		return c.Render(fmt.Sprintf(
 			"Paste your GitHub token here:\n\n%s\n\n%s",
 			r.TextInput.View(),
-			"(esc to quit)") + "\n"
+			"(esc to quit)") + "\n")
+	}
+
+	if r.state == ADD_GITHUB_REPOSITORY {
+		return c.Render(fmt.Sprintf(
+			"Paste your repository URL here:\n\n%s\n\n%s",
+			r.TextInput.View(),
+			"(esc to quit)") + "\n")
 	}
 
 	repositories := ""
@@ -168,8 +177,6 @@ func (r *SettingsScreenModel) View() string {
 			repositories += "\n"
 		}
 	}
-
-	c := lipgloss.NewStyle().PaddingTop(1).PaddingBottom(1).PaddingLeft(2).PaddingRight(2)
 
 	return c.Render(lipgloss.JoinVertical(lipgloss.Left, "renders settings screen\n", repositories, HELP))
 }
