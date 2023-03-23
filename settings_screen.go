@@ -85,7 +85,7 @@ func (r *SettingsScreenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						r.SelectedRepositoryIndex = r.SelectedRepositoryIndex - 1
 					}
 				}
-			case "escape":
+			case "esc":
 				{
 					if r.state == ADD_GITHUB_TOKEN || r.state == ADD_GITHUB_REPOSITORY {
 						r.state = DEFAULT
