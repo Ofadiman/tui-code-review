@@ -169,5 +169,7 @@ func (r *SettingsScreenModel) View() string {
 		}
 	}
 
-	return lipgloss.JoinVertical(lipgloss.Left, "renders settings screen\n", repositories, HELP)
+	c := lipgloss.NewStyle().PaddingTop(1).PaddingBottom(1).PaddingLeft(2).PaddingRight(2)
+
+	return c.Render(lipgloss.JoinVertical(lipgloss.Left, "renders settings screen\n", repositories, HELP))
 }
