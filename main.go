@@ -7,9 +7,12 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+const SCREEN_SETTINGS = "settings"
+const SCREEN_PULL_REQUESTS = "pull_requests"
+
 func NewRouter(settingsScreen *SettingsScreen, pullRequestsScreen *PullRequestsScreen, globalState *Window, settings *Settings, logger *Logger) *Router {
 	return &Router{
-		currentScreen:      "settings",
+		currentScreen:      SCREEN_PULL_REQUESTS,
 		SettingsScreen:     settingsScreen,
 		PullRequestsScreen: pullRequestsScreen,
 		Window:             globalState,
@@ -36,9 +39,12 @@ func (r *Router) Init() tea.Cmd {
 
 func (r *Router) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
-	if r.currentScreen == "settings" {
+
+	if r.currentScreen == SCREEN_SETTINGS {
 		_, cmd = r.SettingsScreen.Update(msg)
-	} else {
+	}
+
+	if r.currentScreen == SCREEN_PULL_REQUESTS {
 		_, cmd = r.PullRequestsScreen.Update(msg)
 	}
 
@@ -73,11 +79,15 @@ func (r *Router) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (r *Router) View() string {
-	if r.currentScreen == "settings" {
+	if r.currentScreen == SCREEN_SETTINGS {
 		return r.SettingsScreen.View()
-	} else {
+	}
+
+	if r.currentScreen == SCREEN_PULL_REQUESTS {
 		return r.PullRequestsScreen.View()
 	}
+
+	panic(fmt.Sprintf("incorrect screen name %v", r.currentScreen))
 }
 
 func main() {
