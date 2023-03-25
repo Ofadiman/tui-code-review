@@ -2,14 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/ofadiman/tui-code-review/log"
-	"github.com/ofadiman/tui-code-review/settings"
 	"strconv"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-func NewRouter(settingsScreen *SettingsScreen, pullRequestsScreen *PullRequestsScreen, globalState *GlobalState, settings *settings.Settings, logger *log.Logger) *Router {
+func NewRouter(settingsScreen *SettingsScreen, pullRequestsScreen *PullRequestsScreen, globalState *GlobalState, settings *Settings, logger *Logger) *Router {
 	return &Router{
 		currentScreen:      "settings",
 		SettingsScreen:     settingsScreen,
@@ -26,8 +24,8 @@ type Router struct {
 	*SettingsScreen
 	*PullRequestsScreen
 	*GlobalState
-	*settings.Settings
-	*log.Logger
+	*Settings
+	*Logger
 }
 
 func (r *Router) Init() tea.Cmd {
@@ -83,9 +81,9 @@ func (r *Router) View() string {
 }
 
 func main() {
-	logger := log.NewLogger()
+	logger := NewLogger()
 
-	settingsInstance := settings.NewSettings(logger)
+	settingsInstance := NewSettings(logger)
 	settingsInstance.Load()
 
 	gitHubApi := NewGithubApi(settingsInstance.GithubToken)

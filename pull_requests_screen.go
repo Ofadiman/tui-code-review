@@ -7,8 +7,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/muesli/reflow/padding"
 	"github.com/muesli/reflow/wordwrap"
-	"github.com/ofadiman/tui-code-review/log"
-	"github.com/ofadiman/tui-code-review/settings"
 	"strings"
 )
 
@@ -17,12 +15,12 @@ var columnStyle = lipgloss.NewStyle().Border(roundedBorder).BorderForeground(lip
 
 type PullRequestsScreen struct {
 	*GlobalState
-	*settings.Settings
-	*log.Logger
+	*Settings
+	*Logger
 	*GithubApi
 }
 
-func NewPullRequestsScreen(globalState *GlobalState, settings *settings.Settings, logger *log.Logger, githubApi *GithubApi) *PullRequestsScreen {
+func NewPullRequestsScreen(globalState *GlobalState, settings *Settings, logger *Logger, githubApi *GithubApi) *PullRequestsScreen {
 	return &PullRequestsScreen{
 		GlobalState: globalState,
 		Settings:    settings,

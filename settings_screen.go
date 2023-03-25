@@ -6,8 +6,6 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/muesli/reflow/wordwrap"
-	"github.com/ofadiman/tui-code-review/log"
-	"github.com/ofadiman/tui-code-review/settings"
 	"os/exec"
 	"runtime"
 )
@@ -25,12 +23,12 @@ type SettingsScreen struct {
 	state                   state
 	SelectedRepositoryIndex int
 	*GlobalState
-	*settings.Settings
-	*log.Logger
+	*Settings
+	*Logger
 	*GithubApi
 }
 
-func NewSettingsScreen(globalState *GlobalState, settings *settings.Settings, logger *log.Logger, gitHubApi *GithubApi) *SettingsScreen {
+func NewSettingsScreen(globalState *GlobalState, settings *Settings, logger *Logger, gitHubApi *GithubApi) *SettingsScreen {
 	textInput := textinput.New()
 	textInput.Placeholder = "Type something..."
 	textInput.CharLimit = 200

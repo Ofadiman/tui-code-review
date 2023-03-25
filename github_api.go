@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"github.com/Khan/genqlient/graphql"
-	"github.com/ofadiman/tui-code-review/log"
 	"net/http"
 )
 
@@ -34,7 +33,7 @@ func NewGithubApi(token string) *GithubApi {
 
 type GithubApi struct {
 	client *graphql.Client
-	*log.Logger
+	*Logger
 }
 
 func (r *GithubApi) UpdateClient(token string) {

@@ -1,8 +1,7 @@
-package settings
+package main
 
 import (
 	"encoding/json"
-	"github.com/ofadiman/tui-code-review/log"
 	"os"
 )
 
@@ -10,10 +9,10 @@ type Settings struct {
 	GithubToken    string   `json:"github_token,omitempty"`
 	Repositories   []string `json:"repositories,omitempty"`
 	ConfigFilePath string
-	*log.Logger
+	*Logger
 }
 
-func NewSettings(logger *log.Logger) *Settings {
+func NewSettings(logger *Logger) *Settings {
 	home, _ := os.UserHomeDir()
 
 	return &Settings{
