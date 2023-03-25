@@ -18,6 +18,7 @@ type PullRequestsScreen struct {
 	*Settings
 	*Logger
 	*GithubApi
+	data *[]*getRepositoryInfoResponse
 }
 
 func NewPullRequestsScreen(globalState *Window, settings *Settings, logger *Logger, githubApi *GithubApi) *PullRequestsScreen {
@@ -34,18 +35,42 @@ func (r *PullRequestsScreen) Init() tea.Cmd {
 		return nil
 	}
 
-	var response *getRepositoryInfoResponse
-	var err error
-	response, err = getRepositoryInfo(context.Background(), *r.GithubApi.client, "Ofadiman", "tui-code-review")
-	if err != nil {
-		r.Logger.Error(err)
+	channel := make(chan *getRepositoryInfoResponse)
+	responses := make([]*getRepositoryInfoResponse, len(r.Settings.Repositories))
 
-		if strings.Contains(err.Error(), "401") {
-			r.Settings.UpdateGitHubToken("")
-		}
+	for _, repositoryUrl := range r.Settings.Repositories {
+		go func(repositoryUrl string) {
+			urlParts := strings.Split(repositoryUrl, "/")
+			username := urlParts[len(urlParts)-2]
+			repositoryName := urlParts[len(urlParts)-1]
+
+			r.Logger.Info(fmt.Sprintf("sending request to %v/%v", username, repositoryName))
+
+			var response *getRepositoryInfoResponse
+			var err error
+			response, err = getRepositoryInfo(context.Background(), *r.GithubApi.client, username, repositoryName)
+			if err != nil {
+				r.Logger.Info("error is not nil")
+				channel <- nil
+
+				r.Logger.Error(err)
+
+				if strings.Contains(err.Error(), "401") {
+					r.Settings.UpdateGitHubToken("")
+				}
+			} else {
+				r.Logger.Info("passing response to channel")
+				channel <- response
+			}
+		}(repositoryUrl)
 	}
 
-	r.Logger.Struct(response)
+	for i := 0; i < len(r.Settings.Repositories); i++ {
+		responses[i] = <-channel
+	}
+
+	r.data = &responses
+	r.Logger.Struct(responses)
 
 	return nil
 }
