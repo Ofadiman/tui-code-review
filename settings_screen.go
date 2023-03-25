@@ -166,8 +166,8 @@ func (r *SettingsScreenModel) View() string {
 
 	repositories := ""
 
-	s := lipgloss.NewStyle()
-	x := lipgloss.NewStyle().Inherit(s).Underline(true)
+	s := lipgloss.NewStyle().Foreground(lipgloss.Color("245"))
+	x := lipgloss.NewStyle().Underline(true)
 	for index, url := range r.Settings.Repositories {
 		if index == r.SelectedRepositoryIndex {
 			repositories += x.Render(url)
