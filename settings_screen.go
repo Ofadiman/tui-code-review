@@ -5,6 +5,7 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/muesli/reflow/wordwrap"
 	"github.com/ofadiman/tui-code-review/log"
 	"github.com/ofadiman/tui-code-review/settings"
 	"os/exec"
@@ -176,7 +177,19 @@ func (r *SettingsScreenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return r, cmd
 }
 
-const HELP = "ctrl+q quit, ctrl+u update github token, ctrl+r add github repository delete delete selected repository"
+var greyText = lipgloss.NewStyle().Foreground(lipgloss.Color("245"))
+var whiteText = lipgloss.NewStyle().Foreground(lipgloss.Color("231"))
+
+const DELIMITER = " • "
+
+var HELP_QUIT = lipgloss.JoinHorizontal(lipgloss.Left, whiteText.Render("Ctrl+Q"), " ", greyText.Render("Quit program"))
+var HELP_UPDATE_GITHUB_TOKEN = lipgloss.JoinHorizontal(lipgloss.Left, whiteText.Render("Ctrl+U"), " ", greyText.Render("Update GitHub token"))
+var HELP_ADD_GITHUB_REPOSITORY = lipgloss.JoinHorizontal(lipgloss.Left, whiteText.Render("Ctrl+R"), " ", greyText.Render("Add GitHub repository"))
+var HELP_DELETE_GITHUB_REPOSITORY = lipgloss.JoinHorizontal(lipgloss.Left, whiteText.Render("Delete"), " ", greyText.Render("Delete selected GitHub repository"))
+var HELP_OPEN_GITHUB_REPOSITORY = lipgloss.JoinHorizontal(lipgloss.Left, whiteText.Render("Enter"), " ", greyText.Render("Open selected GitHub repository"))
+var HELP_J = lipgloss.JoinHorizontal(lipgloss.Left, whiteText.Render("J"), " ", greyText.Render("Move down"))
+var HELP_K = lipgloss.JoinHorizontal(lipgloss.Left, whiteText.Render("K"), " ", greyText.Render("Move up"))
+var HELP = lipgloss.JoinHorizontal(lipgloss.Left, HELP_QUIT, DELIMITER, HELP_UPDATE_GITHUB_TOKEN, DELIMITER, HELP_ADD_GITHUB_REPOSITORY, DELIMITER, HELP_DELETE_GITHUB_REPOSITORY, DELIMITER, HELP_OPEN_GITHUB_REPOSITORY, DELIMITER, HELP_J, DELIMITER, HELP_K)
 
 func (r *SettingsScreenModel) View() string {
 	c := lipgloss.NewStyle().PaddingTop(1).PaddingBottom(1).PaddingLeft(2).PaddingRight(2)
@@ -209,5 +222,11 @@ func (r *SettingsScreenModel) View() string {
 		}
 	}
 
-	return c.Render(lipgloss.JoinVertical(lipgloss.Left, "renders settings screen\n", repositories, HELP))
+	wrapper := wordwrap.NewWriter(r.GlobalState.WindowWidth - roundedBorder.GetLeftSize() - roundedBorder.GetRightSize())
+	_, err := wrapper.Write([]byte(HELP))
+	if err != nil {
+		r.Logger.Error(err)
+	}
+
+	return c.Render(lipgloss.JoinVertical(lipgloss.Left, "Settings\n", repositories, wrapper.String()))
 }
