@@ -7,6 +7,8 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/ofadiman/tui-code-review/log"
 	"github.com/ofadiman/tui-code-review/settings"
+	"os/exec"
+	"runtime"
 )
 
 type state string
@@ -35,6 +37,7 @@ func NewSettingsScreenModel() *SettingsScreenModel {
 
 	return &SettingsScreenModel{
 		TextInput: textInput,
+		state:     DEFAULT,
 	}
 }
 
@@ -107,6 +110,34 @@ func (r *SettingsScreenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case "enter":
 				{
 					switch r.state {
+					case DEFAULT:
+						{
+							selectedRepository := r.Settings.Repositories[r.SelectedRepositoryIndex]
+
+							r.Logger.Info(fmt.Sprintf("opening a default browser on %v page", selectedRepository))
+
+							var err error
+							switch runtime.GOOS {
+							case "linux":
+								{
+									err = exec.Command("xdg-open", selectedRepository).Start()
+								}
+							case "windows":
+								{
+									err = exec.Command("rundll32", "url.dll,FileProtocolHandler", selectedRepository).Start()
+								}
+							case "darwin":
+								{
+									err = exec.Command("open", selectedRepository).Start()
+								}
+							default:
+								err = fmt.Errorf("unsupported platform %v", runtime.GOOS)
+							}
+
+							if err != nil {
+								panic(err)
+							}
+						}
 					case ADD_GITHUB_TOKEN:
 						{
 							r.Logger.Info(fmt.Sprintf("current input value %v", r.TextInput.Value()))
