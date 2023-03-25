@@ -4,21 +4,10 @@ import (
 	"fmt"
 	"github.com/ofadiman/tui-code-review/log"
 	"github.com/ofadiman/tui-code-review/settings"
-	"net/http"
 	"strconv"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
-
-type authedTransport struct {
-	key     string
-	wrapped http.RoundTripper
-}
-
-func (t *authedTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	req.Header.Set("Authorization", "bearer "+t.key)
-	return t.wrapped.RoundTrip(req)
-}
 
 type GlobalState struct {
 	WindowWidth  int
@@ -131,25 +120,33 @@ func (r *RouterModel) View() string {
 
 func main() {
 	logger := log.NewLogger()
-	settings_ := settings.NewSettings().WithLogger(logger)
 
+	settings_ := settings.NewSettings().WithLogger(logger)
 	settings_.Load()
 
+	gitHubGraphqlApi := NewGithubApi(settings_.GithubToken)
+
 	globalState := NewGlobalState()
+
 	settingsScreen := NewSettingsScreenModel().
 		WithSettings(settings_).
 		WithGlobalState(globalState).
-		WithLogger(logger)
+		WithLogger(logger).
+		WithGitHubGraphqlApi(gitHubGraphqlApi)
+
 	pullRequestsScreenModel := NewPullRequestsScreenModel().
 		WithSettings(settings_).
 		WithGlobalState(globalState).
-		WithLogger(logger)
+		WithLogger(logger).
+		WithGitHubGraphqlApi(gitHubGraphqlApi)
+
 	routerModel := NewRouterModel().
 		WithSettings(settings_).
 		WithGlobalState(globalState).
 		WithSettingsScreenModel(settingsScreen).
 		WithPullRequestsScreenModel(pullRequestsScreenModel).
 		WithLogger(logger)
+
 	routerModel.activeModel = "settings"
 
 	program := tea.NewProgram(routerModel, tea.WithAltScreen())

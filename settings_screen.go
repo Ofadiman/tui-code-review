@@ -27,6 +27,7 @@ type SettingsScreenModel struct {
 	*GlobalState
 	*settings.Settings
 	*log.Logger
+	*GitHubApi
 }
 
 func NewSettingsScreenModel() *SettingsScreenModel {
@@ -56,6 +57,12 @@ func (r *SettingsScreenModel) WithSettings(settings *settings.Settings) *Setting
 
 func (r *SettingsScreenModel) WithLogger(logger *log.Logger) *SettingsScreenModel {
 	r.Logger = logger
+
+	return r
+}
+
+func (r *SettingsScreenModel) WithGitHubGraphqlApi(gitHubGraphqlApi *GitHubApi) *SettingsScreenModel {
+	r.GitHubApi = gitHubGraphqlApi
 
 	return r
 }
@@ -144,6 +151,7 @@ func (r *SettingsScreenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 							r.Logger.Info(fmt.Sprintf("current input value %v", r.TextInput.Value()))
 
 							r.Settings.UpdateGitHubToken(r.TextInput.Value())
+							r.GitHubApi.UpdateClient(r.TextInput.Value())
 
 							if r.TextInput.Value() != "" {
 								r.TextInput.Reset()

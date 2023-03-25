@@ -3,14 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/Khan/genqlient/graphql"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/muesli/reflow/padding"
 	"github.com/muesli/reflow/wordwrap"
 	"github.com/ofadiman/tui-code-review/log"
 	"github.com/ofadiman/tui-code-review/settings"
-	"net/http"
 	"strings"
 )
 
@@ -21,6 +19,7 @@ type PullRequestsScreenModel struct {
 	*GlobalState
 	*settings.Settings
 	*log.Logger
+	*GitHubApi
 }
 
 func NewPullRequestsScreenModel() *PullRequestsScreenModel {
@@ -45,22 +44,20 @@ func (r *PullRequestsScreenModel) WithLogger(logger *log.Logger) *PullRequestsSc
 	return r
 }
 
+func (r *PullRequestsScreenModel) WithGitHubGraphqlApi(gitHubGraphqlApi *GitHubApi) *PullRequestsScreenModel {
+	r.GitHubApi = gitHubGraphqlApi
+
+	return r
+}
+
 func (r *PullRequestsScreenModel) Init() tea.Cmd {
 	if r.Settings.GithubToken == "" {
 		return nil
 	}
 
-	httpClient := http.Client{
-		Transport: &authedTransport{
-			key:     r.Settings.GithubToken,
-			wrapped: http.DefaultTransport,
-		},
-	}
-	graphqlClient := graphql.NewClient("https://api.github.com/graphql", &httpClient)
-
 	var response *getRepositoryInfoResponse
 	var err error
-	response, err = getRepositoryInfo(context.Background(), graphqlClient, "Ofadiman", "tui-code-review")
+	response, err = getRepositoryInfo(context.Background(), *r.GitHubApi.client, "Ofadiman", "tui-code-review")
 	if err != nil {
 		r.Logger.Error(err)
 
