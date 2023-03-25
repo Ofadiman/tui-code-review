@@ -2,19 +2,18 @@ package main
 
 import (
 	"fmt"
+	"github.com/ofadiman/tui-code-review/globals"
 	"strconv"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-func NewRouter(settingsScreen *SettingsScreen, pullRequestsScreen *PullRequestsScreen, globalState *Window, settings *Settings, logger *Logger) *Router {
+func NewRouter(settingsScreen *SettingsScreen, pullRequestsScreen *PullRequestsScreen, globals *globals.Globals) *Router {
 	return &Router{
 		currentScreen:      "settings",
 		SettingsScreen:     settingsScreen,
 		PullRequestsScreen: pullRequestsScreen,
-		Window:             globalState,
-		Settings:           settings,
-		Logger:             logger,
+		Globals:            globals,
 	}
 
 }
@@ -23,9 +22,7 @@ type Router struct {
 	currentScreen string
 	*SettingsScreen
 	*PullRequestsScreen
-	*Window
-	*Settings
-	*Logger
+	*globals.Globals
 }
 
 func (r *Router) Init() tea.Cmd {
@@ -62,10 +59,10 @@ func (r *Router) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case tea.WindowSizeMsg:
 		{
-			r.Logger.Info(fmt.Sprintf("window width is set to %v", strconv.Itoa(msg.Width)))
-			r.Logger.Info(fmt.Sprintf("window height is set to %v", strconv.Itoa(msg.Height)))
-			r.Window.Height = msg.Height
-			r.Window.Width = msg.Width
+			r.Globals.Info(fmt.Sprintf("window width is set to %v", strconv.Itoa(msg.Width)))
+			r.Globals.Info(fmt.Sprintf("window height is set to %v", strconv.Itoa(msg.Height)))
+			r.Globals.Height = msg.Height
+			r.Globals.Width = msg.Width
 		}
 	}
 
@@ -81,20 +78,10 @@ func (r *Router) View() string {
 }
 
 func main() {
-	logger := NewLogger()
-
-	settingsInstance := NewSettings(logger)
-	settingsInstance.Load()
-
-	gitHubApi := NewGithubApi(settingsInstance.GithubToken)
-
-	globalState := NewWindow()
-
-	settingsScreen := NewSettingsScreen(globalState, settingsInstance, logger, gitHubApi)
-
-	pullRequestsScreen := NewPullRequestsScreen(globalState, settingsInstance, logger, gitHubApi)
-
-	router := NewRouter(settingsScreen, pullRequestsScreen, globalState, settingsInstance, logger)
+	glob := globals.NewGlobals()
+	settingsScreen := NewSettingsScreen(glob)
+	pullRequestsScreen := NewPullRequestsScreen(glob)
+	router := NewRouter(settingsScreen, pullRequestsScreen, glob)
 
 	program := tea.NewProgram(router, tea.WithAltScreen())
 	if _, err := program.Run(); err != nil {

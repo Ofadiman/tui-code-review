@@ -6,6 +6,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/muesli/reflow/wordwrap"
+	"github.com/ofadiman/tui-code-review/globals"
 	"os/exec"
 	"runtime"
 )
@@ -22,13 +23,10 @@ type SettingsScreen struct {
 	TextInput               textinput.Model
 	state                   state
 	SelectedRepositoryIndex int
-	*Window
-	*Settings
-	*Logger
-	*GithubApi
+	*globals.Globals
 }
 
-func NewSettingsScreen(globalState *Window, settings *Settings, logger *Logger, gitHubApi *GithubApi) *SettingsScreen {
+func NewSettingsScreen(globals *globals.Globals) *SettingsScreen {
 	textInput := textinput.New()
 	textInput.Placeholder = "Type something..."
 	textInput.CharLimit = 200
@@ -39,10 +37,7 @@ func NewSettingsScreen(globalState *Window, settings *Settings, logger *Logger, 
 		TextInput:               textInput,
 		state:                   DEFAULT,
 		SelectedRepositoryIndex: 0,
-		Window:                  globalState,
-		Settings:                settings,
-		Logger:                  logger,
-		GithubApi:               gitHubApi,
+		Globals:                 globals,
 	}
 }
 
@@ -56,7 +51,7 @@ func (r *SettingsScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		{
-			r.Logger.KeyPress(msg.String())
+			r.Globals.KeyPress(msg.String())
 
 			switch msg.String() {
 			case "j":
@@ -92,16 +87,16 @@ func (r *SettingsScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			case "delete":
 				{
-					r.Settings.DeleteRepositoryUrl(r.Settings.Repositories[r.SelectedRepositoryIndex])
+					r.Globals.DeleteRepositoryUrl(r.Globals.Repositories[r.SelectedRepositoryIndex])
 				}
 			case "enter":
 				{
 					switch r.state {
 					case DEFAULT:
 						{
-							selectedRepository := r.Settings.Repositories[r.SelectedRepositoryIndex]
+							selectedRepository := r.Globals.Repositories[r.SelectedRepositoryIndex]
 
-							r.Logger.Info(fmt.Sprintf("opening a default browser on %v page", selectedRepository))
+							r.Globals.Info(fmt.Sprintf("opening a default browser on %v page", selectedRepository))
 
 							var err error
 							switch runtime.GOOS {
@@ -127,10 +122,10 @@ func (r *SettingsScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						}
 					case ADD_GITHUB_TOKEN:
 						{
-							r.Logger.Info(fmt.Sprintf("current input value %v", r.TextInput.Value()))
+							r.Globals.Info(fmt.Sprintf("current input value %v", r.TextInput.Value()))
 
-							r.Settings.UpdateGitHubToken(r.TextInput.Value())
-							r.GithubApi.UpdateClient(r.TextInput.Value())
+							r.Globals.UpdateGitHubToken(r.TextInput.Value())
+							r.Globals.UpdateClient(r.TextInput.Value())
 
 							if r.TextInput.Value() != "" {
 								r.TextInput.Reset()
@@ -140,9 +135,9 @@ func (r *SettingsScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						}
 					case ADD_GITHUB_REPOSITORY:
 						{
-							r.Logger.Info(fmt.Sprintf("current input value %v", r.TextInput.Value()))
+							r.Globals.Info(fmt.Sprintf("current input value %v", r.TextInput.Value()))
 
-							r.Settings.AddRepositoryUrl(r.TextInput.Value())
+							r.Globals.AddRepositoryUrl(r.TextInput.Value())
 
 							if r.TextInput.Value() != "" {
 								r.TextInput.Reset()
@@ -199,7 +194,7 @@ func (r *SettingsScreen) View() string {
 
 	s := lipgloss.NewStyle().Foreground(lipgloss.Color("245"))
 	x := lipgloss.NewStyle().Underline(true)
-	for index, url := range r.Settings.Repositories {
+	for index, url := range r.Globals.Repositories {
 		if index == r.SelectedRepositoryIndex {
 			repositories += x.Render(url)
 			repositories += "\n"
@@ -209,11 +204,11 @@ func (r *SettingsScreen) View() string {
 		}
 	}
 
-	wrapper := wordwrap.NewWriter(r.Window.Width - roundedBorder.GetLeftSize() - roundedBorder.GetRightSize())
+	wrapper := wordwrap.NewWriter(r.Globals.Width - roundedBorder.GetLeftSize() - roundedBorder.GetRightSize())
 	_, err := wrapper.Write([]byte(HELP))
 	if err != nil {
-		r.Logger.Error(err)
+		r.Globals.Error(err)
 	}
 
-	return c.Render(lipgloss.JoinVertical(lipgloss.Left, "Settings\n", repositories, wrapper.String()))
+	return c.Render(lipgloss.JoinVertical(lipgloss.Left, "settings\n", repositories, wrapper.String()))
 }

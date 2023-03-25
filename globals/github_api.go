@@ -1,4 +1,4 @@
-package main
+package globals
 
 import (
 	"fmt"
@@ -6,19 +6,19 @@ import (
 	"net/http"
 )
 
-type AuthedTransport struct {
+type authedTransport struct {
 	token        string
 	roundTripper http.RoundTripper
 }
 
-func (r *AuthedTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+func (r *authedTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	req.Header.Set("Authorization", "bearer "+r.token)
 	return r.roundTripper.RoundTrip(req)
 }
 
-func NewGithubApi(token string) *GithubApi {
+func newGithubApi(token string) *githubApi {
 	httpClient := http.Client{
-		Transport: &AuthedTransport{
+		Transport: &authedTransport{
 			token:        token,
 			roundTripper: http.DefaultTransport,
 		},
@@ -26,26 +26,26 @@ func NewGithubApi(token string) *GithubApi {
 
 	graphqlClient := graphql.NewClient("https://api.github.com/graphql", &httpClient)
 
-	return &GithubApi{
-		client: &graphqlClient,
+	return &githubApi{
+		Client: &graphqlClient,
 	}
 }
 
-type GithubApi struct {
-	client *graphql.Client
-	*Logger
+type githubApi struct {
+	Client *graphql.Client
+	*logger
 }
 
-func (r *GithubApi) UpdateClient(token string) {
-	r.Logger.Info(fmt.Sprintf("creating a new graphql client with token %v", token))
+func (r *githubApi) UpdateClient(token string) {
+	r.logger.Info(fmt.Sprintf("creating a new graphql Client with token %v", token))
 
 	httpClient := http.Client{
-		Transport: &AuthedTransport{
+		Transport: &authedTransport{
 			token:        token,
 			roundTripper: http.DefaultTransport,
 		},
 	}
 
 	graphqlClient := graphql.NewClient("https://api.github.com/graphql", &httpClient)
-	r.client = &graphqlClient
+	r.Client = &graphqlClient
 }

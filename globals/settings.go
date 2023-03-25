@@ -1,34 +1,34 @@
-package main
+package globals
 
 import (
 	"encoding/json"
 	"os"
 )
 
-type Settings struct {
+type settings struct {
 	GithubToken    string   `json:"github_token,omitempty"`
 	Repositories   []string `json:"repositories,omitempty"`
 	ConfigFilePath string
-	*Logger
+	*logger
 }
 
-func NewSettings(logger *Logger) *Settings {
+func newSettings(logger *logger) *settings {
 	home, _ := os.UserHomeDir()
 
-	return &Settings{
+	return &settings{
 		ConfigFilePath: home + "/" + ".tui-code-review.json",
-		Logger:         logger,
+		logger:         logger,
 	}
 }
 
-func (r *Settings) Load() {
+func (r *settings) Load() {
 	_, err := os.Stat(r.ConfigFilePath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			r.Save()
 		} else {
-			r.Logger.Info("could not stat configuration file")
-			r.Logger.Error(err)
+			r.logger.Info("could not stat configuration file")
+			r.logger.Error(err)
 			panic(err)
 		}
 	}
@@ -40,19 +40,19 @@ func (r *Settings) Load() {
 
 	err = json.Unmarshal(bytes, r)
 	if err != nil {
-		r.Logger.Info("could not unmarshal configuration file")
-		r.Logger.Error(err)
+		r.logger.Info("could not unmarshal configuration file")
+		r.logger.Error(err)
 		panic(err)
 	}
 
-	r.Logger.Struct(r)
+	r.logger.Struct(r)
 }
 
-func (r *Settings) Save() {
+func (r *settings) Save() {
 	bytes, err := json.Marshal(r)
 	if err != nil {
-		r.Logger.Info("could not stat configuration file")
-		r.Logger.Error(err)
+		r.logger.Info("could not stat configuration file")
+		r.logger.Error(err)
 		panic(err)
 	}
 
@@ -62,17 +62,17 @@ func (r *Settings) Save() {
 	}
 }
 
-func (r *Settings) UpdateGitHubToken(token string) {
+func (r *settings) UpdateGitHubToken(token string) {
 	r.GithubToken = token
 	r.Save()
 }
 
-func (r *Settings) AddRepositoryUrl(repositoryUrl string) {
+func (r *settings) AddRepositoryUrl(repositoryUrl string) {
 	r.Repositories = append(r.Repositories, repositoryUrl)
 	r.Save()
 }
 
-func (r *Settings) DeleteRepositoryUrl(repositoryUrl string) {
+func (r *settings) DeleteRepositoryUrl(repositoryUrl string) {
 	var updatedRepositories []string
 	for _, url := range r.Repositories {
 		if url == repositoryUrl {

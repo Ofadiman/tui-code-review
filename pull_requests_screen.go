@@ -7,6 +7,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/muesli/reflow/padding"
 	"github.com/muesli/reflow/wordwrap"
+	"github.com/ofadiman/tui-code-review/globals"
 	"strings"
 )
 
@@ -14,38 +15,32 @@ var roundedBorder = lipgloss.RoundedBorder()
 var columnStyle = lipgloss.NewStyle().Border(roundedBorder).BorderForeground(lipgloss.Color("63"))
 
 type PullRequestsScreen struct {
-	*Window
-	*Settings
-	*Logger
-	*GithubApi
+	*globals.Globals
 }
 
-func NewPullRequestsScreen(globalState *Window, settings *Settings, logger *Logger, githubApi *GithubApi) *PullRequestsScreen {
+func NewPullRequestsScreen(globals *globals.Globals) *PullRequestsScreen {
 	return &PullRequestsScreen{
-		Window:    globalState,
-		Settings:  settings,
-		Logger:    logger,
-		GithubApi: githubApi,
+		Globals: globals,
 	}
 }
 
 func (r *PullRequestsScreen) Init() tea.Cmd {
-	if r.Settings.GithubToken == "" {
+	if r.Globals.GithubToken == "" {
 		return nil
 	}
 
 	var response *getRepositoryInfoResponse
 	var err error
-	response, err = getRepositoryInfo(context.Background(), *r.GithubApi.client, "Ofadiman", "tui-code-review")
+	response, err = getRepositoryInfo(context.Background(), *r.Globals.Client, "Ofadiman", "tui-code-review")
 	if err != nil {
-		r.Logger.Error(err)
+		r.Globals.Error(err)
 
 		if strings.Contains(err.Error(), "401") {
-			r.Settings.UpdateGitHubToken("")
+			r.Globals.UpdateGitHubToken("")
 		}
 	}
 
-	r.Logger.Struct(response)
+	r.Globals.Struct(response)
 
 	return nil
 }
@@ -57,7 +52,7 @@ func (r *PullRequestsScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch msg.String() {
 			case "s":
 				{
-					r.Logger.KeyPress("s")
+					r.Globals.KeyPress("s")
 					return r, nil
 				}
 			}
@@ -68,15 +63,15 @@ func (r *PullRequestsScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (r *PullRequestsScreen) View() string {
-	columnStyle.Width(r.Window.Width - roundedBorder.GetLeftSize() - roundedBorder.GetRightSize())
+	columnStyle.Width(r.Globals.Width - roundedBorder.GetLeftSize() - roundedBorder.GetRightSize())
 	header := columnStyle.Render("renders pull requests screen")
 	lorem := "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
 
-	f := wordwrap.NewWriter(r.Window.Width - roundedBorder.GetLeftSize() - roundedBorder.GetRightSize())
+	f := wordwrap.NewWriter(r.Globals.Width - roundedBorder.GetLeftSize() - roundedBorder.GetRightSize())
 	f.Breakpoints = []rune{' '}
 	_, err := f.Write([]byte(lorem))
 	if err != nil {
-		r.Logger.Error(err)
+		r.Globals.Error(err)
 	}
 
 	help := []struct {

@@ -1,4 +1,4 @@
-package main
+package globals
 
 import (
 	"fmt"
@@ -6,12 +6,12 @@ import (
 	"time"
 )
 
-type Logger struct {
+type logger struct {
 	file string
 }
 
-func NewLogger() *Logger {
-	logger := &Logger{
+func newLogger() *logger {
+	logger := &logger{
 		file: fmt.Sprintf("logs/%v.log", time.Now().Unix()),
 	}
 
@@ -24,25 +24,25 @@ func NewLogger() *Logger {
 	return logger
 }
 
-func (r *Logger) append(msg string) {
+func (r *logger) append(msg string) {
 	file, _ := os.OpenFile(r.file, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	defer file.Close()
 
 	file.WriteString(fmt.Sprintf("%v\n", msg))
 }
 
-func (r *Logger) Error(error error) {
+func (r *logger) Error(error error) {
 	r.append(fmt.Sprintf("error: %v", error))
 }
 
-func (r *Logger) Info(msg string) {
+func (r *logger) Info(msg string) {
 	r.append(fmt.Sprintf("info: %v", msg))
 }
 
-func (r *Logger) Struct(msg any) {
+func (r *logger) Struct(msg any) {
 	r.append(fmt.Sprintf("struct: %#v", msg))
 }
 
-func (r *Logger) KeyPress(msg string) {
+func (r *logger) KeyPress(msg string) {
 	r.append(fmt.Sprintf("key_press: %v", msg))
 }
