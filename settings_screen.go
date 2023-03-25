@@ -22,13 +22,13 @@ type SettingsScreen struct {
 	TextInput               textinput.Model
 	state                   state
 	SelectedRepositoryIndex int
-	*GlobalState
+	*Window
 	*Settings
 	*Logger
 	*GithubApi
 }
 
-func NewSettingsScreen(globalState *GlobalState, settings *Settings, logger *Logger, gitHubApi *GithubApi) *SettingsScreen {
+func NewSettingsScreen(globalState *Window, settings *Settings, logger *Logger, gitHubApi *GithubApi) *SettingsScreen {
 	textInput := textinput.New()
 	textInput.Placeholder = "Type something..."
 	textInput.CharLimit = 200
@@ -39,7 +39,7 @@ func NewSettingsScreen(globalState *GlobalState, settings *Settings, logger *Log
 		TextInput:               textInput,
 		state:                   DEFAULT,
 		SelectedRepositoryIndex: 0,
-		GlobalState:             globalState,
+		Window:                  globalState,
 		Settings:                settings,
 		Logger:                  logger,
 		GithubApi:               gitHubApi,
@@ -209,7 +209,7 @@ func (r *SettingsScreen) View() string {
 		}
 	}
 
-	wrapper := wordwrap.NewWriter(r.GlobalState.WindowWidth - roundedBorder.GetLeftSize() - roundedBorder.GetRightSize())
+	wrapper := wordwrap.NewWriter(r.Window.Width - roundedBorder.GetLeftSize() - roundedBorder.GetRightSize())
 	_, err := wrapper.Write([]byte(HELP))
 	if err != nil {
 		r.Logger.Error(err)

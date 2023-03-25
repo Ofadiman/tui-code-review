@@ -14,18 +14,18 @@ var roundedBorder = lipgloss.RoundedBorder()
 var columnStyle = lipgloss.NewStyle().Border(roundedBorder).BorderForeground(lipgloss.Color("63"))
 
 type PullRequestsScreen struct {
-	*GlobalState
+	*Window
 	*Settings
 	*Logger
 	*GithubApi
 }
 
-func NewPullRequestsScreen(globalState *GlobalState, settings *Settings, logger *Logger, githubApi *GithubApi) *PullRequestsScreen {
+func NewPullRequestsScreen(globalState *Window, settings *Settings, logger *Logger, githubApi *GithubApi) *PullRequestsScreen {
 	return &PullRequestsScreen{
-		GlobalState: globalState,
-		Settings:    settings,
-		Logger:      logger,
-		GithubApi:   githubApi,
+		Window:    globalState,
+		Settings:  settings,
+		Logger:    logger,
+		GithubApi: githubApi,
 	}
 }
 
@@ -68,11 +68,11 @@ func (r *PullRequestsScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (r *PullRequestsScreen) View() string {
-	columnStyle.Width(r.GlobalState.WindowWidth - roundedBorder.GetLeftSize() - roundedBorder.GetRightSize())
+	columnStyle.Width(r.Window.Width - roundedBorder.GetLeftSize() - roundedBorder.GetRightSize())
 	header := columnStyle.Render("renders pull requests screen")
 	lorem := "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
 
-	f := wordwrap.NewWriter(r.GlobalState.WindowWidth - roundedBorder.GetLeftSize() - roundedBorder.GetRightSize())
+	f := wordwrap.NewWriter(r.Window.Width - roundedBorder.GetLeftSize() - roundedBorder.GetRightSize())
 	f.Breakpoints = []rune{' '}
 	_, err := f.Write([]byte(lorem))
 	if err != nil {

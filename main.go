@@ -7,12 +7,12 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-func NewRouter(settingsScreen *SettingsScreen, pullRequestsScreen *PullRequestsScreen, globalState *GlobalState, settings *Settings, logger *Logger) *Router {
+func NewRouter(settingsScreen *SettingsScreen, pullRequestsScreen *PullRequestsScreen, globalState *Window, settings *Settings, logger *Logger) *Router {
 	return &Router{
 		currentScreen:      "settings",
 		SettingsScreen:     settingsScreen,
 		PullRequestsScreen: pullRequestsScreen,
-		GlobalState:        globalState,
+		Window:             globalState,
 		Settings:           settings,
 		Logger:             logger,
 	}
@@ -23,7 +23,7 @@ type Router struct {
 	currentScreen string
 	*SettingsScreen
 	*PullRequestsScreen
-	*GlobalState
+	*Window
 	*Settings
 	*Logger
 }
@@ -64,8 +64,8 @@ func (r *Router) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		{
 			r.Logger.Info(fmt.Sprintf("window width is set to %v", strconv.Itoa(msg.Width)))
 			r.Logger.Info(fmt.Sprintf("window height is set to %v", strconv.Itoa(msg.Height)))
-			r.GlobalState.WindowHeight = msg.Height
-			r.GlobalState.WindowWidth = msg.Width
+			r.Window.Height = msg.Height
+			r.Window.Width = msg.Width
 		}
 	}
 
@@ -88,7 +88,7 @@ func main() {
 
 	gitHubApi := NewGithubApi(settingsInstance.GithubToken)
 
-	globalState := NewGlobalState()
+	globalState := NewWindow()
 
 	settingsScreen := NewSettingsScreen(globalState, settingsInstance, logger, gitHubApi)
 
