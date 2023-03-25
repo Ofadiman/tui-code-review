@@ -20,58 +20,39 @@ const (
 	DEFAULT               state = "DEFAULT"
 )
 
-type SettingsScreenModel struct {
+type SettingsScreen struct {
 	TextInput               textinput.Model
 	state                   state
 	SelectedRepositoryIndex int
 	*GlobalState
 	*settings.Settings
 	*log.Logger
-	*GitHubApi
+	*GithubApi
 }
 
-func NewSettingsScreenModel() *SettingsScreenModel {
+func NewSettingsScreen(globalState *GlobalState, settings *settings.Settings, logger *log.Logger, gitHubApi *GithubApi) *SettingsScreen {
 	textInput := textinput.New()
 	textInput.Placeholder = "Type something..."
 	textInput.CharLimit = 200
 	textInput.Focus()
-	textInput.Width = 40
+	textInput.Width = 50
 
-	return &SettingsScreenModel{
-		TextInput: textInput,
-		state:     DEFAULT,
+	return &SettingsScreen{
+		TextInput:               textInput,
+		state:                   DEFAULT,
+		SelectedRepositoryIndex: 0,
+		GlobalState:             globalState,
+		Settings:                settings,
+		Logger:                  logger,
+		GithubApi:               gitHubApi,
 	}
 }
 
-func (r *SettingsScreenModel) WithGlobalState(globalState *GlobalState) *SettingsScreenModel {
-	r.GlobalState = globalState
-
-	return r
-}
-
-func (r *SettingsScreenModel) WithSettings(settings *settings.Settings) *SettingsScreenModel {
-	r.Settings = settings
-
-	return r
-}
-
-func (r *SettingsScreenModel) WithLogger(logger *log.Logger) *SettingsScreenModel {
-	r.Logger = logger
-
-	return r
-}
-
-func (r *SettingsScreenModel) WithGitHubGraphqlApi(gitHubGraphqlApi *GitHubApi) *SettingsScreenModel {
-	r.GitHubApi = gitHubGraphqlApi
-
-	return r
-}
-
-func (r *SettingsScreenModel) Init() tea.Cmd {
+func (r *SettingsScreen) Init() tea.Cmd {
 	return nil
 }
 
-func (r *SettingsScreenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (r *SettingsScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
 	switch msg := msg.(type) {
@@ -151,7 +132,7 @@ func (r *SettingsScreenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 							r.Logger.Info(fmt.Sprintf("current input value %v", r.TextInput.Value()))
 
 							r.Settings.UpdateGitHubToken(r.TextInput.Value())
-							r.GitHubApi.UpdateClient(r.TextInput.Value())
+							r.GithubApi.UpdateClient(r.TextInput.Value())
 
 							if r.TextInput.Value() != "" {
 								r.TextInput.Reset()
@@ -199,7 +180,7 @@ var HELP_J = lipgloss.JoinHorizontal(lipgloss.Left, whiteText.Render("J"), " ", 
 var HELP_K = lipgloss.JoinHorizontal(lipgloss.Left, whiteText.Render("K"), " ", greyText.Render("Move up"))
 var HELP = lipgloss.JoinHorizontal(lipgloss.Left, HELP_QUIT, DELIMITER, HELP_UPDATE_GITHUB_TOKEN, DELIMITER, HELP_ADD_GITHUB_REPOSITORY, DELIMITER, HELP_DELETE_GITHUB_REPOSITORY, DELIMITER, HELP_OPEN_GITHUB_REPOSITORY, DELIMITER, HELP_J, DELIMITER, HELP_K)
 
-func (r *SettingsScreenModel) View() string {
+func (r *SettingsScreen) View() string {
 	c := lipgloss.NewStyle().PaddingTop(1).PaddingBottom(1).PaddingLeft(2).PaddingRight(2)
 
 	if r.state == ADD_GITHUB_TOKEN {

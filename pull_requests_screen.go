@@ -15,49 +15,30 @@ import (
 var roundedBorder = lipgloss.RoundedBorder()
 var columnStyle = lipgloss.NewStyle().Border(roundedBorder).BorderForeground(lipgloss.Color("63"))
 
-type PullRequestsScreenModel struct {
+type PullRequestsScreen struct {
 	*GlobalState
 	*settings.Settings
 	*log.Logger
-	*GitHubApi
+	*GithubApi
 }
 
-func NewPullRequestsScreenModel() *PullRequestsScreenModel {
-	return &PullRequestsScreenModel{}
+func NewPullRequestsScreen(globalState *GlobalState, settings *settings.Settings, logger *log.Logger, githubApi *GithubApi) *PullRequestsScreen {
+	return &PullRequestsScreen{
+		GlobalState: globalState,
+		Settings:    settings,
+		Logger:      logger,
+		GithubApi:   githubApi,
+	}
 }
 
-func (r *PullRequestsScreenModel) WithGlobalState(globalState *GlobalState) *PullRequestsScreenModel {
-	r.GlobalState = globalState
-
-	return r
-}
-
-func (r *PullRequestsScreenModel) WithSettings(settings *settings.Settings) *PullRequestsScreenModel {
-	r.Settings = settings
-
-	return r
-}
-
-func (r *PullRequestsScreenModel) WithLogger(logger *log.Logger) *PullRequestsScreenModel {
-	r.Logger = logger
-
-	return r
-}
-
-func (r *PullRequestsScreenModel) WithGitHubGraphqlApi(gitHubGraphqlApi *GitHubApi) *PullRequestsScreenModel {
-	r.GitHubApi = gitHubGraphqlApi
-
-	return r
-}
-
-func (r *PullRequestsScreenModel) Init() tea.Cmd {
+func (r *PullRequestsScreen) Init() tea.Cmd {
 	if r.Settings.GithubToken == "" {
 		return nil
 	}
 
 	var response *getRepositoryInfoResponse
 	var err error
-	response, err = getRepositoryInfo(context.Background(), *r.GitHubApi.client, "Ofadiman", "tui-code-review")
+	response, err = getRepositoryInfo(context.Background(), *r.GithubApi.client, "Ofadiman", "tui-code-review")
 	if err != nil {
 		r.Logger.Error(err)
 
@@ -71,7 +52,7 @@ func (r *PullRequestsScreenModel) Init() tea.Cmd {
 	return nil
 }
 
-func (r *PullRequestsScreenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (r *PullRequestsScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		{
@@ -88,7 +69,7 @@ func (r *PullRequestsScreenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return r, nil
 }
 
-func (r *PullRequestsScreenModel) View() string {
+func (r *PullRequestsScreen) View() string {
 	columnStyle.Width(r.GlobalState.WindowWidth - roundedBorder.GetLeftSize() - roundedBorder.GetRightSize())
 	header := columnStyle.Render("renders pull requests screen")
 	lorem := "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."

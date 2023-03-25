@@ -13,11 +13,12 @@ type Settings struct {
 	*log.Logger
 }
 
-func NewSettings() *Settings {
+func NewSettings(logger *log.Logger) *Settings {
 	home, _ := os.UserHomeDir()
 
 	return &Settings{
 		ConfigFilePath: home + "/" + ".tui-code-review.json",
+		Logger:         logger,
 	}
 }
 
@@ -60,12 +61,6 @@ func (r *Settings) Save() {
 	if err != nil {
 		panic(err)
 	}
-}
-
-func (r *Settings) WithLogger(logger *log.Logger) *Settings {
-	r.Logger = logger
-
-	return r
 }
 
 func (r *Settings) UpdateGitHubToken(token string) {

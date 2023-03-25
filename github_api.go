@@ -17,7 +17,7 @@ func (r *AuthedTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	return r.roundTripper.RoundTrip(req)
 }
 
-func NewGithubApi(token string) *GitHubApi {
+func NewGithubApi(token string) *GithubApi {
 	httpClient := http.Client{
 		Transport: &AuthedTransport{
 			token:        token,
@@ -27,23 +27,17 @@ func NewGithubApi(token string) *GitHubApi {
 
 	graphqlClient := graphql.NewClient("https://api.github.com/graphql", &httpClient)
 
-	return &GitHubApi{
+	return &GithubApi{
 		client: &graphqlClient,
 	}
 }
 
-type GitHubApi struct {
+type GithubApi struct {
 	client *graphql.Client
 	*log.Logger
 }
 
-func (r *GitHubApi) WithLogger(logger *log.Logger) *GitHubApi {
-	r.Logger = logger
-
-	return r
-}
-
-func (r *GitHubApi) UpdateClient(token string) {
+func (r *GithubApi) UpdateClient(token string) {
 	r.Logger.Info(fmt.Sprintf("creating a new graphql client with token %v", token))
 
 	httpClient := http.Client{

@@ -9,75 +9,39 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-type GlobalState struct {
-	WindowWidth  int
-	WindowHeight int
+func NewRouter(settingsScreen *SettingsScreen, pullRequestsScreen *PullRequestsScreen, globalState *GlobalState, settings *settings.Settings, logger *log.Logger) *Router {
+	return &Router{
+		currentScreen:      "settings",
+		SettingsScreen:     settingsScreen,
+		PullRequestsScreen: pullRequestsScreen,
+		GlobalState:        globalState,
+		Settings:           settings,
+		Logger:             logger,
+	}
+
 }
 
-func NewGlobalState() *GlobalState {
-	return &GlobalState{}
-}
-
-type RouterModel struct {
-	activeModel string
-	*SettingsScreenModel
-	*PullRequestsScreenModel
+type Router struct {
+	currentScreen string
+	*SettingsScreen
+	*PullRequestsScreen
 	*GlobalState
 	*settings.Settings
 	*log.Logger
 }
 
-func NewRouterModel() *RouterModel {
-	return &RouterModel{
-		activeModel:             "",
-		SettingsScreenModel:     nil,
-		PullRequestsScreenModel: nil,
-		GlobalState:             nil,
-	}
-}
-
-func (r *RouterModel) WithGlobalState(globalState *GlobalState) *RouterModel {
-	r.GlobalState = globalState
-
-	return r
-}
-
-func (r *RouterModel) WithSettingsScreenModel(model *SettingsScreenModel) *RouterModel {
-	r.SettingsScreenModel = model
-
-	return r
-}
-
-func (r *RouterModel) WithPullRequestsScreenModel(model *PullRequestsScreenModel) *RouterModel {
-	r.PullRequestsScreenModel = model
-
-	return r
-}
-
-func (r *RouterModel) WithSettings(settings *settings.Settings) *RouterModel {
-	r.Settings = settings
-
-	return r
-}
-
-func (r *RouterModel) WithLogger(logger *log.Logger) *RouterModel {
-	r.Logger = logger
-
-	return r
-}
-
-func (r *RouterModel) Init() tea.Cmd {
-	r.SettingsScreenModel.Init()
-	r.PullRequestsScreenModel.Init()
+func (r *Router) Init() tea.Cmd {
+	r.SettingsScreen.Init()
+	r.PullRequestsScreen.Init()
 	return nil
 }
 
-func (r *RouterModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (r *Router) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
-	if r.activeModel == "settings" {
-		_, cmd = r.SettingsScreenModel.Update(msg)
+	if r.currentScreen == "settings" {
+		_, cmd = r.SettingsScreen.Update(msg)
 	} else {
-		_, cmd = r.PullRequestsScreenModel.Update(msg)
+		_, cmd = r.PullRequestsScreen.Update(msg)
 	}
 
 	switch msg := msg.(type) {
@@ -85,12 +49,12 @@ func (r *RouterModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.Type {
 		case tea.KeyCtrlS:
 			{
-				r.activeModel = "settings"
+				r.currentScreen = "settings"
 				return r, cmd
 			}
 		case tea.KeyCtrlP:
 			{
-				r.activeModel = "pull_requests"
+				r.currentScreen = "pull_requests"
 				return r, cmd
 			}
 		case tea.KeyCtrlQ:
@@ -110,46 +74,31 @@ func (r *RouterModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return r, cmd
 }
 
-func (r *RouterModel) View() string {
-	if r.activeModel == "settings" {
-		return r.SettingsScreenModel.View()
+func (r *Router) View() string {
+	if r.currentScreen == "settings" {
+		return r.SettingsScreen.View()
 	} else {
-		return r.PullRequestsScreenModel.View()
+		return r.PullRequestsScreen.View()
 	}
 }
 
 func main() {
 	logger := log.NewLogger()
 
-	settings_ := settings.NewSettings().WithLogger(logger)
-	settings_.Load()
+	settingsInstance := settings.NewSettings(logger)
+	settingsInstance.Load()
 
-	gitHubGraphqlApi := NewGithubApi(settings_.GithubToken)
+	gitHubApi := NewGithubApi(settingsInstance.GithubToken)
 
 	globalState := NewGlobalState()
 
-	settingsScreen := NewSettingsScreenModel().
-		WithSettings(settings_).
-		WithGlobalState(globalState).
-		WithLogger(logger).
-		WithGitHubGraphqlApi(gitHubGraphqlApi)
+	settingsScreen := NewSettingsScreen(globalState, settingsInstance, logger, gitHubApi)
 
-	pullRequestsScreenModel := NewPullRequestsScreenModel().
-		WithSettings(settings_).
-		WithGlobalState(globalState).
-		WithLogger(logger).
-		WithGitHubGraphqlApi(gitHubGraphqlApi)
+	pullRequestsScreen := NewPullRequestsScreen(globalState, settingsInstance, logger, gitHubApi)
 
-	routerModel := NewRouterModel().
-		WithSettings(settings_).
-		WithGlobalState(globalState).
-		WithSettingsScreenModel(settingsScreen).
-		WithPullRequestsScreenModel(pullRequestsScreenModel).
-		WithLogger(logger)
+	router := NewRouter(settingsScreen, pullRequestsScreen, globalState, settingsInstance, logger)
 
-	routerModel.activeModel = "settings"
-
-	program := tea.NewProgram(routerModel, tea.WithAltScreen())
+	program := tea.NewProgram(router, tea.WithAltScreen())
 	if _, err := program.Run(); err != nil {
 		panic(err)
 	}
