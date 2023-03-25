@@ -11,6 +11,18 @@ import (
 	"github.com/Khan/genqlient/graphql"
 )
 
+// __getRepositoryInfoInput is used internally by genqlient
+type __getRepositoryInfoInput struct {
+	Owner string `json:"owner"`
+	Name  string `json:"name"`
+}
+
+// GetOwner returns __getRepositoryInfoInput.Owner, and is useful for accessing the field via an interface.
+func (v *__getRepositoryInfoInput) GetOwner() string { return v.Owner }
+
+// GetName returns __getRepositoryInfoInput.Name, and is useful for accessing the field via an interface.
+func (v *__getRepositoryInfoInput) GetName() string { return v.Name }
+
 // getRepositoryInfoRepository includes the requested fields of the GraphQL type Repository.
 // The GraphQL type's documentation follows.
 //
@@ -946,12 +958,14 @@ func (v *getRepositoryInfoResponse) GetRepository() getRepositoryInfoRepository 
 func getRepositoryInfo(
 	ctx context.Context,
 	client graphql.Client,
+	owner string,
+	name string,
 ) (*getRepositoryInfoResponse, error) {
 	req := &graphql.Request{
 		OpName: "getRepositoryInfo",
 		Query: `
-query getRepositoryInfo {
-	repository(owner: "Ofadiman", name: "tui-code-review") {
+query getRepositoryInfo ($owner: String!, $name: String!) {
+	repository(owner: $owner, name: $name) {
 		id
 		pullRequests(first: 20) {
 			nodes {
@@ -985,6 +999,10 @@ query getRepositoryInfo {
 	}
 }
 `,
+		Variables: &__getRepositoryInfoInput{
+			Owner: owner,
+			Name:  name,
+		},
 	}
 	var err error
 

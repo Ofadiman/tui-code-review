@@ -11,3 +11,6 @@ settings_setup:
 settings_clean:
 	@rm ~/.tui-code-review.json
 	
+settings_show:
+	@cat ~/.tui-code-review.json
+	

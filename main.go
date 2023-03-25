@@ -225,6 +225,8 @@ func (r *RouterModel) WithLogger(logger *log.Logger) *RouterModel {
 }
 
 func (r *RouterModel) Init() tea.Cmd {
+	r.SettingsScreenModel.Init()
+	r.PullRequestsScreenModel.Init()
 	return nil
 }
 
@@ -279,23 +281,6 @@ func main() {
 	settings_ := settings.NewSettings().WithLogger(logger)
 
 	settings_.Load()
-
-	//httpClient := http.Client{
-	//	Transport: &authedTransport{
-	//		key:     settings.GithubToken,
-	//		wrapped: http.DefaultTransport,
-	//	},
-	//}
-	//graphqlClient := graphql.NewClient("https://api.github.com/graphql", &httpClient)
-
-	//var response *getRepositoryInfoResponse
-	//response, err = getRepositoryInfo(context.Background(), graphqlClient)
-	//if err != nil {
-	//	debug.msg(debug.GraphQL(), "could not fetch data from github")
-	//	debug.msg(debug.Error(), err.Error())
-	//	panic(err)
-	//}
-	//debug.msg(debug.GraphQL(), fmt.Sprintf("%#v", response))
 
 	globalState := NewGlobalState()
 	settingsScreen := NewSettingsScreenModel().

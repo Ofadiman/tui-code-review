@@ -1,13 +1,16 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"github.com/Khan/genqlient/graphql"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/muesli/reflow/padding"
 	"github.com/muesli/reflow/wordwrap"
 	"github.com/ofadiman/tui-code-review/log"
 	"github.com/ofadiman/tui-code-review/settings"
+	"net/http"
 	"strings"
 )
 
@@ -43,6 +46,31 @@ func (r *PullRequestsScreenModel) WithLogger(logger *log.Logger) *PullRequestsSc
 }
 
 func (r *PullRequestsScreenModel) Init() tea.Cmd {
+	if r.Settings.GithubToken == "" {
+		return nil
+	}
+
+	httpClient := http.Client{
+		Transport: &authedTransport{
+			key:     r.Settings.GithubToken,
+			wrapped: http.DefaultTransport,
+		},
+	}
+	graphqlClient := graphql.NewClient("https://api.github.com/graphql", &httpClient)
+
+	var response *getRepositoryInfoResponse
+	var err error
+	response, err = getRepositoryInfo(context.Background(), graphqlClient, "Ofadiman", "tui-code-review")
+	if err != nil {
+		r.Logger.Error(err)
+
+		if strings.Contains(err.Error(), "401") {
+			r.Settings.UpdateGitHubToken("")
+		}
+	}
+
+	r.Logger.Struct(response)
+
 	return nil
 }
 

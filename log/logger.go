@@ -40,7 +40,7 @@ func (r *Logger) Info(msg string) {
 }
 
 func (r *Logger) Struct(msg any) {
-	r.append(fmt.Sprintf("struct: %v", msg))
+	r.append(fmt.Sprintf("struct: %#v", msg))
 }
 
 func (r *Logger) KeyPress(msg string) {
