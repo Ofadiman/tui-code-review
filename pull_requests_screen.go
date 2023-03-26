@@ -89,7 +89,7 @@ func getGithubPullRequestsFromRepositories(repositoryInfoResponses []*getReposit
 	return pullRequests
 }
 
-func sortPullRequestsForMe(pullRequestsForMe []*getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequest, logger *Logger) {
+func sortPullRequestsForMe(pullRequestsForMe []*getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequest, logger *Logger, username string) {
 	sort.Slice(pullRequestsForMe, func(i, j int) bool {
 		if pullRequestsForMe[i].GetIsDraft() == true && pullRequestsForMe[j].GetIsDraft() == false {
 			return false
@@ -106,7 +106,7 @@ func sortPullRequestsForMe(pullRequestsForMe []*getRepositoryInfoRepositoryPullR
 			for _, node := range pullRequestsForMe[i].GetReviewRequests().GetNodes() {
 				requestedReviewer, ok := node.GetRequestedReviewer().(*getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestReviewRequestsReviewRequestConnectionNodesReviewRequestRequestedReviewerUser)
 				if ok {
-					if requestedReviewer.GetLogin() == "GuilermeheGardosso" {
+					if requestedReviewer.GetLogin() == username {
 						isFirstAwaiting = true
 					}
 				} else {
@@ -119,7 +119,7 @@ func sortPullRequestsForMe(pullRequestsForMe []*getRepositoryInfoRepositoryPullR
 
 				requestedReviewer, ok := node.GetRequestedReviewer().(*getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestReviewRequestsReviewRequestConnectionNodesReviewRequestRequestedReviewerUser)
 				if ok {
-					if requestedReviewer.GetLogin() == "GuilermeheGardosso" {
+					if requestedReviewer.GetLogin() == username {
 						isSecondAwaiting = true
 					}
 				} else {
@@ -133,7 +133,7 @@ func sortPullRequestsForMe(pullRequestsForMe []*getRepositoryInfoRepositoryPullR
 			isSecondApproved := false
 
 			for _, node := range pullRequestsForMe[i].GetLatestReviews().GetNodes() {
-				if node.GetAuthor().GetLogin() == "GuilermeheGardosso" {
+				if node.GetAuthor().GetLogin() == username {
 					if node.GetState() == PullRequestReviewStateApproved {
 						isFirstApproved = true
 					}
@@ -145,7 +145,7 @@ func sortPullRequestsForMe(pullRequestsForMe []*getRepositoryInfoRepositoryPullR
 			}
 
 			for _, node := range pullRequestsForMe[j].GetLatestReviews().GetNodes() {
-				if node.GetAuthor().GetLogin() == "GuilermeheGardosso" {
+				if node.GetAuthor().GetLogin() == username {
 					if node.GetState() == PullRequestReviewStateApproved {
 						isSecondApproved = true
 					}
@@ -251,13 +251,13 @@ func (r *PullRequestsScreen) Init() tea.Cmd {
 	allPullRequestsFromWatchedRepositories := getGithubPullRequestsFromRepositories(responses)
 
 	// TODO: Take user from settings.
-	pullRequestsForMe := findPullRequestsForMe(allPullRequestsFromWatchedRepositories, "GuilermeheGardosso")
+	pullRequestsForMe := findPullRequestsForMe(allPullRequestsFromWatchedRepositories, r.Settings.Username)
 
-	sortPullRequestsForMe(pullRequestsForMe, r.Logger)
+	sortPullRequestsForMe(pullRequestsForMe, r.Logger, r.Settings.Username)
 
 	r.Logger.Struct(pullRequestsForMe)
 
-	r.pullRequests = mapGithubPullRequestsToApplicationPullRequests(pullRequestsForMe, "GuilermeheGardosso")
+	r.pullRequests = mapGithubPullRequestsToApplicationPullRequests(pullRequestsForMe, r.Settings.Username)
 
 	return nil
 }

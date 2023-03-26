@@ -7,6 +7,7 @@ import (
 
 type Settings struct {
 	GithubToken    string   `json:"github_token,omitempty"`
+	Username       string   `json:"username,omitempty"`
 	Repositories   []string `json:"repositories,omitempty"`
 	ConfigFilePath string
 	*Logger
