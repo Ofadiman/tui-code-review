@@ -11,6 +11,22 @@ import (
 	"github.com/Khan/genqlient/graphql"
 )
 
+// The possible states of a pull request review.
+type PullRequestReviewState string
+
+const (
+	// A review allowing the pull request to merge.
+	PullRequestReviewStateApproved PullRequestReviewState = "APPROVED"
+	// A review blocking the pull request from merging.
+	PullRequestReviewStateChangesRequested PullRequestReviewState = "CHANGES_REQUESTED"
+	// An informational review.
+	PullRequestReviewStateCommented PullRequestReviewState = "COMMENTED"
+	// A review that has been dismissed.
+	PullRequestReviewStateDismissed PullRequestReviewState = "DISMISSED"
+	// A review that has not yet been submitted.
+	PullRequestReviewStatePending PullRequestReviewState = "PENDING"
+)
+
 // __getRepositoryInfoInput is used internally by genqlient
 type __getRepositoryInfoInput struct {
 	Owner string `json:"owner"`
@@ -28,16 +44,12 @@ func (v *__getRepositoryInfoInput) GetName() string { return v.Name }
 //
 // A repository contains the content for a project.
 type getRepositoryInfoRepository struct {
-	Id string `json:"id"`
 	// A list of pull requests that have been opened in the repository.
-	PullRequests getRepositoryInfoRepositoryPullRequestsPullRequestConnection `json:"pullRequests"`
+	PullRequests *getRepositoryInfoRepositoryPullRequestsPullRequestConnection `json:"pullRequests"`
 }
 
-// GetId returns getRepositoryInfoRepository.Id, and is useful for accessing the field via an interface.
-func (v *getRepositoryInfoRepository) GetId() string { return v.Id }
-
 // GetPullRequests returns getRepositoryInfoRepository.PullRequests, and is useful for accessing the field via an interface.
-func (v *getRepositoryInfoRepository) GetPullRequests() getRepositoryInfoRepositoryPullRequestsPullRequestConnection {
+func (v *getRepositoryInfoRepository) GetPullRequests() *getRepositoryInfoRepositoryPullRequestsPullRequestConnection {
 	return v.PullRequests
 }
 
@@ -47,11 +59,11 @@ func (v *getRepositoryInfoRepository) GetPullRequests() getRepositoryInfoReposit
 // The connection type for PullRequest.
 type getRepositoryInfoRepositoryPullRequestsPullRequestConnection struct {
 	// A list of nodes.
-	Nodes []getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequest `json:"nodes"`
+	Nodes []*getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequest `json:"nodes"`
 }
 
 // GetNodes returns getRepositoryInfoRepositoryPullRequestsPullRequestConnection.Nodes, and is useful for accessing the field via an interface.
-func (v *getRepositoryInfoRepositoryPullRequestsPullRequestConnection) GetNodes() []getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequest {
+func (v *getRepositoryInfoRepositoryPullRequestsPullRequestConnection) GetNodes() []*getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequest {
 	return v.Nodes
 }
 
@@ -60,6 +72,7 @@ func (v *getRepositoryInfoRepositoryPullRequestsPullRequestConnection) GetNodes(
 //
 // A repository pull request.
 type getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequest struct {
+	Id string `json:"id"`
 	// Identifies if the pull request is a draft.
 	IsDraft bool `json:"isDraft"`
 	// The actor who authored the comment.
@@ -67,11 +80,16 @@ type getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullReques
 	// Identifies the date and time when the object was created.
 	CreatedAt time.Time `json:"createdAt"`
 	// A list of latest reviews per user associated with the pull request that are not also pending review.
-	LatestReviews getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestLatestReviewsPullRequestReviewConnection `json:"latestReviews"`
+	LatestReviews *getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestLatestReviewsPullRequestReviewConnection `json:"latestReviews"`
 	// Identifies the pull request title.
 	Title string `json:"title"`
 	// A list of review requests associated with the pull request.
-	ReviewRequests getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestReviewRequestsReviewRequestConnection `json:"reviewRequests"`
+	ReviewRequests *getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestReviewRequestsReviewRequestConnection `json:"reviewRequests"`
+}
+
+// GetId returns getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequest.Id, and is useful for accessing the field via an interface.
+func (v *getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequest) GetId() string {
+	return v.Id
 }
 
 // GetIsDraft returns getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequest.IsDraft, and is useful for accessing the field via an interface.
@@ -90,7 +108,7 @@ func (v *getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRe
 }
 
 // GetLatestReviews returns getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequest.LatestReviews, and is useful for accessing the field via an interface.
-func (v *getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequest) GetLatestReviews() getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestLatestReviewsPullRequestReviewConnection {
+func (v *getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequest) GetLatestReviews() *getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestLatestReviewsPullRequestReviewConnection {
 	return v.LatestReviews
 }
 
@@ -100,7 +118,7 @@ func (v *getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRe
 }
 
 // GetReviewRequests returns getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequest.ReviewRequests, and is useful for accessing the field via an interface.
-func (v *getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequest) GetReviewRequests() getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestReviewRequestsReviewRequestConnection {
+func (v *getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequest) GetReviewRequests() *getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestReviewRequestsReviewRequestConnection {
 	return v.ReviewRequests
 }
 
@@ -138,17 +156,19 @@ func (v *getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRe
 }
 
 type __premarshalgetRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequest struct {
+	Id string `json:"id"`
+
 	IsDraft bool `json:"isDraft"`
 
 	Author json.RawMessage `json:"author"`
 
 	CreatedAt time.Time `json:"createdAt"`
 
-	LatestReviews getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestLatestReviewsPullRequestReviewConnection `json:"latestReviews"`
+	LatestReviews *getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestLatestReviewsPullRequestReviewConnection `json:"latestReviews"`
 
 	Title string `json:"title"`
 
-	ReviewRequests getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestReviewRequestsReviewRequestConnection `json:"reviewRequests"`
+	ReviewRequests *getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestReviewRequestsReviewRequestConnection `json:"reviewRequests"`
 }
 
 func (v *getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequest) MarshalJSON() ([]byte, error) {
@@ -162,6 +182,7 @@ func (v *getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRe
 func (v *getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequest) __premarshalJSON() (*__premarshalgetRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequest, error) {
 	var retval __premarshalgetRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequest
 
+	retval.Id = v.Id
 	retval.IsDraft = v.IsDraft
 	{
 
@@ -411,11 +432,11 @@ func (v *getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRe
 // The connection type for PullRequestReview.
 type getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestLatestReviewsPullRequestReviewConnection struct {
 	// A list of nodes.
-	Nodes []getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestLatestReviewsPullRequestReviewConnectionNodesPullRequestReview `json:"nodes"`
+	Nodes []*getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestLatestReviewsPullRequestReviewConnectionNodesPullRequestReview `json:"nodes"`
 }
 
 // GetNodes returns getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestLatestReviewsPullRequestReviewConnection.Nodes, and is useful for accessing the field via an interface.
-func (v *getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestLatestReviewsPullRequestReviewConnection) GetNodes() []getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestLatestReviewsPullRequestReviewConnectionNodesPullRequestReview {
+func (v *getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestLatestReviewsPullRequestReviewConnection) GetNodes() []*getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestLatestReviewsPullRequestReviewConnectionNodesPullRequestReview {
 	return v.Nodes
 }
 
@@ -424,8 +445,15 @@ func (v *getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRe
 //
 // A review object for a given pull request.
 type getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestLatestReviewsPullRequestReviewConnectionNodesPullRequestReview struct {
+	// Identifies the current state of the pull request review.
+	State PullRequestReviewState `json:"state"`
 	// The actor who authored the comment.
 	Author getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestLatestReviewsPullRequestReviewConnectionNodesPullRequestReviewAuthorActor `json:"-"`
+}
+
+// GetState returns getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestLatestReviewsPullRequestReviewConnectionNodesPullRequestReview.State, and is useful for accessing the field via an interface.
+func (v *getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestLatestReviewsPullRequestReviewConnectionNodesPullRequestReview) GetState() PullRequestReviewState {
+	return v.State
 }
 
 // GetAuthor returns getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestLatestReviewsPullRequestReviewConnectionNodesPullRequestReview.Author, and is useful for accessing the field via an interface.
@@ -467,6 +495,8 @@ func (v *getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRe
 }
 
 type __premarshalgetRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestLatestReviewsPullRequestReviewConnectionNodesPullRequestReview struct {
+	State PullRequestReviewState `json:"state"`
+
 	Author json.RawMessage `json:"author"`
 }
 
@@ -481,6 +511,7 @@ func (v *getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRe
 func (v *getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestLatestReviewsPullRequestReviewConnectionNodesPullRequestReview) __premarshalJSON() (*__premarshalgetRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestLatestReviewsPullRequestReviewConnectionNodesPullRequestReview, error) {
 	var retval __premarshalgetRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestLatestReviewsPullRequestReviewConnectionNodesPullRequestReview
 
+	retval.State = v.State
 	{
 
 		dst := &retval.Author
@@ -725,11 +756,11 @@ func (v *getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRe
 // The connection type for ReviewRequest.
 type getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestReviewRequestsReviewRequestConnection struct {
 	// A list of nodes.
-	Nodes []getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestReviewRequestsReviewRequestConnectionNodesReviewRequest `json:"nodes"`
+	Nodes []*getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestReviewRequestsReviewRequestConnectionNodesReviewRequest `json:"nodes"`
 }
 
 // GetNodes returns getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestReviewRequestsReviewRequestConnection.Nodes, and is useful for accessing the field via an interface.
-func (v *getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestReviewRequestsReviewRequestConnection) GetNodes() []getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestReviewRequestsReviewRequestConnectionNodesReviewRequest {
+func (v *getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestReviewRequestsReviewRequestConnection) GetNodes() []*getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestReviewRequestsReviewRequestConnectionNodesReviewRequest {
 	return v.Nodes
 }
 
@@ -949,11 +980,11 @@ func (v *getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRe
 // getRepositoryInfoResponse is returned by getRepositoryInfo on success.
 type getRepositoryInfoResponse struct {
 	// Lookup a given repository by the owner and repository name.
-	Repository getRepositoryInfoRepository `json:"repository"`
+	Repository *getRepositoryInfoRepository `json:"repository"`
 }
 
 // GetRepository returns getRepositoryInfoResponse.Repository, and is useful for accessing the field via an interface.
-func (v *getRepositoryInfoResponse) GetRepository() getRepositoryInfoRepository { return v.Repository }
+func (v *getRepositoryInfoResponse) GetRepository() *getRepositoryInfoRepository { return v.Repository }
 
 func getRepositoryInfo(
 	ctx context.Context,
@@ -966,9 +997,9 @@ func getRepositoryInfo(
 		Query: `
 query getRepositoryInfo ($owner: String!, $name: String!) {
 	repository(owner: $owner, name: $name) {
-		id
-		pullRequests(first: 20) {
+		pullRequests(first: 20, states: OPEN) {
 			nodes {
+				id
 				isDraft
 				author {
 					__typename
@@ -977,6 +1008,7 @@ query getRepositoryInfo ($owner: String!, $name: String!) {
 				createdAt
 				latestReviews(first: 20) {
 					nodes {
+						state
 						author {
 							__typename
 							login

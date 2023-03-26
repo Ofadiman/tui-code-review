@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"time"
@@ -40,7 +41,11 @@ func (r *Logger) Info(msg string) {
 }
 
 func (r *Logger) Struct(msg any) {
-	r.append(fmt.Sprintf("struct: %#v", msg))
+	bytes, err := json.MarshalIndent(msg, "", "  ")
+	if err != nil {
+		panic(err)
+	}
+	r.append(fmt.Sprintf("struct: %v", string(bytes)))
 }
 
 func (r *Logger) KeyPress(msg string) {

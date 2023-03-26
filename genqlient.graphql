@@ -1,8 +1,8 @@
 query getRepositoryInfo($owner: String!, $name: String!) {
   repository(owner: $owner, name: $name) {
-    id
-    pullRequests(first: 20) {
+    pullRequests(first: 20, states:OPEN) {
       nodes {
+        id
         isDraft
         author {
           login
@@ -10,6 +10,7 @@ query getRepositoryInfo($owner: String!, $name: String!) {
         createdAt
         latestReviews(first: 20) {
           nodes {
+            state
             author {
               login
             }

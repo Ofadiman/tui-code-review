@@ -6,3 +6,4 @@ package: main
 bindings:
   DateTime:
     type: time.Time
+use_struct_references: true

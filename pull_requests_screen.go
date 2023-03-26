@@ -7,6 +7,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/muesli/reflow/padding"
 	"github.com/muesli/reflow/wordwrap"
+	"sort"
 	"strings"
 )
 
@@ -18,7 +19,7 @@ type PullRequestsScreen struct {
 	*Settings
 	*Logger
 	*GithubApi
-	data *[]*getRepositoryInfoResponse
+	data []*getRepositoryInfoResponse
 }
 
 func NewPullRequestsScreen(globalState *Window, settings *Settings, logger *Logger, githubApi *GithubApi) *PullRequestsScreen {
@@ -69,8 +70,127 @@ func (r *PullRequestsScreen) Init() tea.Cmd {
 		responses[i] = <-channel
 	}
 
-	r.data = &responses
-	r.Logger.Struct(responses)
+	var pullRequests []*getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequest
+	for _, response := range responses {
+		prs := response.GetRepository().GetPullRequests().GetNodes()
+		for _, pr := range prs {
+			isSubmittedByMe := false
+			isRequestingMyReview := false
+			isAlreadyReviewedByMe := false
+
+			if pr.GetAuthor().GetLogin() == "GuilermeheGardosso" {
+				isSubmittedByMe = true
+			}
+
+			for _, reviewRequest := range pr.GetReviewRequests().GetNodes() {
+				requestedReviewer, ok := reviewRequest.GetRequestedReviewer().(*getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestReviewRequestsReviewRequestConnectionNodesReviewRequestRequestedReviewerUser)
+				if ok {
+					if requestedReviewer.GetLogin() == "GuilermeheGardosso" {
+						isRequestingMyReview = true
+					}
+				}
+			}
+
+			for _, x := range pr.GetLatestReviews().GetNodes() {
+				if x.GetAuthor().GetLogin() == "GuilermeheGardosso" {
+					isAlreadyReviewedByMe = true
+				}
+			}
+
+			if isSubmittedByMe == false && (isRequestingMyReview || isAlreadyReviewedByMe) {
+				pullRequests = append(pullRequests, pr)
+			}
+		}
+	}
+
+	sort.Slice(pullRequests, func(i, j int) bool {
+		if pullRequests[i].GetIsDraft() == true && pullRequests[j].GetIsDraft() == false {
+			return false
+		}
+
+		if pullRequests[i].GetIsDraft() == false && pullRequests[j].GetIsDraft() == true {
+			return true
+		}
+
+		if pullRequests[i].GetIsDraft() == pullRequests[j].GetIsDraft() {
+			isFirstAwaiting := false
+			isSecondAwaiting := false
+
+			for _, node := range pullRequests[i].GetReviewRequests().GetNodes() {
+				r.Logger.Struct(node)
+
+				requestedReviewer, ok := node.GetRequestedReviewer().(*getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestReviewRequestsReviewRequestConnectionNodesReviewRequestRequestedReviewerUser)
+				if ok {
+					if requestedReviewer.GetLogin() == "GuilermeheGardosso" {
+						isFirstAwaiting = true
+					}
+				} else {
+					r.Logger.Info("requested reviewer is not it the shape I expect")
+				}
+			}
+
+			for _, node := range pullRequests[j].GetReviewRequests().GetNodes() {
+				r.Logger.Struct(node)
+
+				requestedReviewer, ok := node.GetRequestedReviewer().(*getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestReviewRequestsReviewRequestConnectionNodesReviewRequestRequestedReviewerUser)
+				if ok {
+					if requestedReviewer.GetLogin() == "GuilermeheGardosso" {
+						isSecondAwaiting = true
+					}
+				} else {
+					r.Logger.Info("requested reviewer is not it the shape I expect")
+				}
+			}
+
+			isFirstRejected := false
+			isSecondRejected := false
+			isFirstApproved := false
+			isSecondApproved := false
+
+			for _, node := range pullRequests[i].GetLatestReviews().GetNodes() {
+				if node.GetAuthor().GetLogin() == "GuilermeheGardosso" {
+					if node.GetState() == PullRequestReviewStateApproved {
+						isFirstApproved = true
+					}
+
+					if node.GetState() == PullRequestReviewStateChangesRequested {
+						isFirstRejected = true
+					}
+				}
+			}
+
+			for _, node := range pullRequests[j].GetLatestReviews().GetNodes() {
+				if node.GetAuthor().GetLogin() == "GuilermeheGardosso" {
+					if node.GetState() == PullRequestReviewStateApproved {
+						isSecondApproved = true
+					}
+
+					if node.GetState() == PullRequestReviewStateChangesRequested {
+						isSecondRejected = true
+					}
+				}
+			}
+
+			if isFirstRejected && isSecondAwaiting {
+				return false
+			}
+
+			if isFirstApproved && (isSecondAwaiting || isSecondRejected) {
+				return false
+			}
+
+			if isFirstApproved && isSecondApproved || isFirstAwaiting && isSecondAwaiting || isFirstRejected && isSecondRejected {
+				return pullRequests[i].GetCreatedAt().After(pullRequests[j].GetCreatedAt())
+			}
+
+			return true
+		}
+
+		return false
+	})
+
+	r.Logger.Struct(pullRequests)
+	r.data = responses
 
 	return nil
 }
@@ -94,7 +214,7 @@ func (r *PullRequestsScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (r *PullRequestsScreen) View() string {
 	columnStyle.Width(r.Window.Width - roundedBorder.GetLeftSize() - roundedBorder.GetRightSize())
-	header := columnStyle.Render("renders pull requests screen")
+	header := columnStyle.Render("Pull requests")
 	lorem := "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
 
 	f := wordwrap.NewWriter(r.Window.Width - roundedBorder.GetLeftSize() - roundedBorder.GetRightSize())
@@ -130,5 +250,5 @@ func (r *PullRequestsScreen) View() string {
 		mapped[i] = padding.String(fmt.Sprintf("%v %v", shortcut.Render(value.shortcut), description.Render(value.description)), 20)
 	}
 
-	return lipgloss.JoinVertical(0, header, columnStyle.Render(f.String()), strings.Join(mapped, ""))
+	return lipgloss.JoinVertical(lipgloss.Left, header, columnStyle.Render(f.String()), strings.Join(mapped, ""))
 }
