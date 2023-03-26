@@ -179,17 +179,16 @@ var HELP_K = lipgloss.JoinHorizontal(lipgloss.Left, whiteText.Render("K"), " ", 
 var HELP = lipgloss.JoinHorizontal(lipgloss.Left, HELP_QUIT, DELIMITER, HELP_UPDATE_GITHUB_TOKEN, DELIMITER, HELP_ADD_GITHUB_REPOSITORY, DELIMITER, HELP_DELETE_GITHUB_REPOSITORY, DELIMITER, HELP_OPEN_GITHUB_REPOSITORY, DELIMITER, HELP_J, DELIMITER, HELP_K)
 
 func (r *SettingsScreen) View() string {
-	c := lipgloss.NewStyle().PaddingTop(1).PaddingBottom(1).PaddingLeft(2).PaddingRight(2)
 
 	if r.state == ADD_GITHUB_TOKEN {
-		return c.Render(fmt.Sprintf(
+		return StyledMain.Render(fmt.Sprintf(
 			"Paste your GitHub token here:\n\n%s\n\n%s",
 			r.TextInput.View(),
 			"(esc to quit)") + "\n")
 	}
 
 	if r.state == ADD_GITHUB_REPOSITORY {
-		return c.Render(fmt.Sprintf(
+		return StyledMain.Render(fmt.Sprintf(
 			"Paste your repository URL here:\n\n%s\n\n%s",
 			r.TextInput.View(),
 			"(esc to quit)") + "\n")
@@ -215,5 +214,5 @@ func (r *SettingsScreen) View() string {
 		r.Logger.Error(err)
 	}
 
-	return c.Render(lipgloss.JoinVertical(lipgloss.Left, "Settings\n", repositories, wrapper.String()))
+	return StyledMain.Render(lipgloss.JoinVertical(lipgloss.Left, StyledHeader.Render("Settings"), repositories, wrapper.String()))
 }

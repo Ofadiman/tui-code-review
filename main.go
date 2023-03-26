@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/charmbracelet/lipgloss"
 	"strconv"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -72,6 +73,8 @@ func (r *Router) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			r.Logger.Info(fmt.Sprintf("window height is set to %v", strconv.Itoa(msg.Height)))
 			r.Window.Height = msg.Height
 			r.Window.Width = msg.Width
+
+			StyledHeader.Width(msg.Width - lipgloss.RoundedBorder().GetLeftSize() - lipgloss.RoundedBorder().GetRightSize() - StyledMain.GetPaddingLeft() - StyledMain.GetPaddingRight())
 		}
 	}
 

@@ -281,7 +281,7 @@ func (r *PullRequestsScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (r *PullRequestsScreen) View() string {
 	columnStyle.Width(r.Window.Width - roundedBorder.GetLeftSize() - roundedBorder.GetRightSize())
-	header := columnStyle.Render("Pull requests")
+	header := StyledHeader.Render("Pull requests")
 
 	pullRequestStateToUI := map[string]string{
 		PULL_REQUEST_AWAITING: "review required",
@@ -305,5 +305,5 @@ func (r *PullRequestsScreen) View() string {
 		r.Logger.Error(err)
 	}
 
-	return lipgloss.JoinVertical(lipgloss.Left, header, columnStyle.Render(f.String()))
+	return StyledMain.Render(lipgloss.JoinVertical(lipgloss.Left, header, columnStyle.Render(f.String())))
 }
