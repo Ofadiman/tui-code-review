@@ -280,10 +280,10 @@ func (r *PullRequestsScreen) View() string {
 	header := StyledHeader.Render("Pull requests")
 
 	pullRequestStateToUI := map[string]string{
-		PULL_REQUEST_AWAITING: "review required",
-		PULL_REQUEST_APPROVED: "approved",
-		PULL_REQUEST_REJECTED: "changes requested",
-		PULL_REQUEST_DRAFT:    "draft",
+		PULL_REQUEST_AWAITING: StyledAwaiting.Render("review required"),
+		PULL_REQUEST_APPROVED: StyledApproved.Render("approved"),
+		PULL_REQUEST_REJECTED: StyledChangesRequested.Render("changes requested"),
+		PULL_REQUEST_DRAFT:    StyledDraft.Render("draft"),
 	}
 	var pullRequestMessage string
 	for _, pullRequest := range r.pullRequests {
