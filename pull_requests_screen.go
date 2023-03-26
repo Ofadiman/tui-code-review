@@ -18,7 +18,7 @@ type PullRequestsScreen struct {
 	*Settings
 	*Logger
 	*GithubApi
-	pullRequests []*getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequest
+	pullRequests []*PullRequest
 }
 
 type PullRequest struct {
@@ -33,6 +33,50 @@ func NewPullRequestsScreen(globalState *Window, settings *Settings, logger *Logg
 		Logger:    logger,
 		GithubApi: githubApi,
 	}
+}
+
+// TODO: handle case of commented pull request.
+const (
+	PULL_REQUEST_AWAITING = "PULL_REQUEST_AWAITING"
+	PULL_REQUEST_REJECTED = "PULL_REQUEST_REJECTED"
+	PULL_REQUEST_APPROVED = "PULL_REQUEST_APPROVED"
+	PULL_REQUEST_DRAFT    = "PULL_REQUEST_DRAFT"
+)
+
+func mapGithubPullRequestsToApplicationPullRequests(githubPullRequests []*getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequest, user string) []*PullRequest {
+	var applicationPullRequests []*PullRequest
+	for _, githubPullRequest := range githubPullRequests {
+		pullRequest := PullRequest{
+			getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequest: githubPullRequest,
+		}
+
+		if githubPullRequest.GetIsDraft() == true {
+			pullRequest.state = PULL_REQUEST_DRAFT
+		} else {
+			for _, latestReviews := range githubPullRequest.GetLatestReviews().GetNodes() {
+				if latestReviews.GetAuthor().GetLogin() == user {
+					if latestReviews.GetState() == PullRequestReviewStateApproved {
+						pullRequest.state = PULL_REQUEST_APPROVED
+					} else if latestReviews.GetState() == PullRequestReviewStateChangesRequested {
+						pullRequest.state = PULL_REQUEST_REJECTED
+					}
+				}
+			}
+
+			for _, reviewRequest := range githubPullRequest.GetReviewRequests().GetNodes() {
+				requestedReviewer, ok := reviewRequest.GetRequestedReviewer().(*getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestReviewRequestsReviewRequestConnectionNodesReviewRequestRequestedReviewerUser)
+				if ok {
+					if requestedReviewer.GetLogin() == user {
+						pullRequest.state = PULL_REQUEST_AWAITING
+					}
+				}
+			}
+		}
+
+		applicationPullRequests = append(applicationPullRequests, &pullRequest)
+	}
+
+	return applicationPullRequests
 }
 
 func getGithubPullRequestsFromRepositories(repositoryInfoResponses []*getRepositoryInfoResponse) []*getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequest {
@@ -213,7 +257,7 @@ func (r *PullRequestsScreen) Init() tea.Cmd {
 
 	r.Logger.Struct(pullRequestsForMe)
 
-	r.pullRequests = pullRequestsForMe
+	r.pullRequests = mapGithubPullRequestsToApplicationPullRequests(pullRequestsForMe, "GuilermeheGardosso")
 
 	return nil
 }
@@ -239,15 +283,24 @@ func (r *PullRequestsScreen) View() string {
 	columnStyle.Width(r.Window.Width - roundedBorder.GetLeftSize() - roundedBorder.GetRightSize())
 	header := columnStyle.Render("Pull requests")
 
-	var todo string
-	for _, value := range r.pullRequests {
-		todo += fmt.Sprintf("isDraft: %v\n", value.GetIsDraft())
-		todo += fmt.Sprintf("author: %v\n", value.GetAuthor().GetLogin())
-		todo += "\n"
+	pullRequestStateToUI := map[string]string{
+		PULL_REQUEST_AWAITING: "review required",
+		PULL_REQUEST_APPROVED: "approved",
+		PULL_REQUEST_REJECTED: "changes requested",
+		PULL_REQUEST_DRAFT:    "draft",
+	}
+	var pullRequestMessage string
+	for _, pullRequest := range r.pullRequests {
+		info, ok := pullRequestStateToUI[pullRequest.state]
+		if !ok {
+			r.Logger.Info(fmt.Sprintf("info does not exist for pull request state %v", pullRequest.state))
+		}
+
+		pullRequestMessage += fmt.Sprintf("• %v wants to merge \"%v\" (%v)\n", pullRequest.GetAuthor().GetLogin(), pullRequest.GetTitle(), info)
 	}
 	f := wordwrap.NewWriter(r.Window.Width - roundedBorder.GetLeftSize() - roundedBorder.GetRightSize())
 	f.Breakpoints = []rune{' '}
-	_, err := f.Write([]byte(todo))
+	_, err := f.Write([]byte(pullRequestMessage))
 	if err != nil {
 		r.Logger.Error(err)
 	}
