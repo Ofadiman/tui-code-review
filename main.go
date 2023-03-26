@@ -74,7 +74,7 @@ func (r *Router) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			r.Window.Height = msg.Height
 			r.Window.Width = msg.Width
 
-			StyledHeader.Width(msg.Width - lipgloss.RoundedBorder().GetLeftSize() - lipgloss.RoundedBorder().GetRightSize() - StyledMain.GetPaddingLeft() - StyledMain.GetPaddingRight())
+			StyledHeader.Width(msg.Width - lipgloss.RoundedBorder().GetLeftSize() - lipgloss.RoundedBorder().GetRightSize() - StyledMain.GetHorizontalPadding())
 		}
 	}
 

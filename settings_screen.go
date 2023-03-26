@@ -208,7 +208,7 @@ func (r *SettingsScreen) View() string {
 		}
 	}
 
-	wrapper := wordwrap.NewWriter(r.Window.Width - roundedBorder.GetLeftSize() - roundedBorder.GetRightSize())
+	wrapper := wordwrap.NewWriter(r.Window.Width)
 	_, err := wrapper.Write([]byte(HELP))
 	if err != nil {
 		r.Logger.Error(err)

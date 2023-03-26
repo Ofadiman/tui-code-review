@@ -10,9 +10,6 @@ import (
 	"strings"
 )
 
-var roundedBorder = lipgloss.RoundedBorder()
-var columnStyle = lipgloss.NewStyle().Border(roundedBorder).BorderForeground(lipgloss.Color("63"))
-
 type PullRequestsScreen struct {
 	*Window
 	*Settings
@@ -280,7 +277,6 @@ func (r *PullRequestsScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (r *PullRequestsScreen) View() string {
-	columnStyle.Width(r.Window.Width - roundedBorder.GetLeftSize() - roundedBorder.GetRightSize())
 	header := StyledHeader.Render("Pull requests")
 
 	pullRequestStateToUI := map[string]string{
@@ -298,12 +294,12 @@ func (r *PullRequestsScreen) View() string {
 
 		pullRequestMessage += fmt.Sprintf("• %v wants to merge \"%v\" (%v)\n", pullRequest.GetAuthor().GetLogin(), pullRequest.GetTitle(), info)
 	}
-	f := wordwrap.NewWriter(r.Window.Width - roundedBorder.GetLeftSize() - roundedBorder.GetRightSize())
+	f := wordwrap.NewWriter(r.Window.Width - StyledMain.GetHorizontalPadding())
 	f.Breakpoints = []rune{' '}
 	_, err := f.Write([]byte(pullRequestMessage))
 	if err != nil {
 		r.Logger.Error(err)
 	}
 
-	return StyledMain.Render(lipgloss.JoinVertical(lipgloss.Left, header, columnStyle.Render(f.String())))
+	return StyledMain.Render(lipgloss.JoinVertical(lipgloss.Left, header, f.String()))
 }
