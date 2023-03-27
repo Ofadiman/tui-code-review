@@ -6,6 +6,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/muesli/reflow/wordwrap"
+	"math"
 	"os/exec"
 	"runtime"
 )
@@ -93,6 +94,7 @@ func (r *SettingsScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case helpDeleteGitHubRepositoryUrl.Shortcut:
 				{
 					r.Settings.DeleteRepositoryUrl(r.Settings.Repositories[r.SelectedRepositoryIndex])
+					r.SelectedRepositoryIndex = int(math.Max(float64(r.SelectedRepositoryIndex-1), float64(0)))
 				}
 			case helpOpenGitHubRepositoryUrl.Shortcut:
 				{
