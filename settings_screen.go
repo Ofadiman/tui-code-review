@@ -147,6 +147,7 @@ func (r *SettingsScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 							r.Settings.AddRepositoryUrl(r.TextInput.Value())
 
 							if r.TextInput.Value() != "" {
+								r.SelectedRepositoryIndex = len(r.Repositories) - 1
 								r.TextInput.Reset()
 							}
 
