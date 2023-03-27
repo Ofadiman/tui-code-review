@@ -77,3 +77,9 @@ var helpOpenAllActivePullRequests = Help{
 	Description: "Open all active pull requests",
 	Display:     "Ctrl + O",
 }
+
+var helpUpdateUsername = Help{
+	Shortcut:    "ctrl+b",
+	Description: "Update username",
+	Display:     "Ctrl + B",
+}

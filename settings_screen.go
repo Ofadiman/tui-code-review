@@ -14,10 +14,11 @@ import (
 const (
 	UPDATE_GITHUB_TOKEN       string = "UPDATE_GITHUB_TOKEN"
 	ADD_GITHUB_REPOSITORY_URL string = "ADD_GITHUB_REPOSITORY_URL"
+	UPDATE_USERNAME           string = "UPDATE_USERNAME"
 	DEFAULT                   string = "DEFAULT"
 )
 
-var SETTINGS_HELP = []Help{helpUp, helpDown, helpQuit, helpAddGitHubRepositoryUrl, helpDeleteGitHubRepositoryUrl, helpOpenGitHubRepositoryUrl, helpUpdateGithubToken, helpSwitchToPullRequestsScreen}
+var SETTINGS_HELP = []Help{helpUp, helpDown, helpQuit, helpAddGitHubRepositoryUrl, helpDeleteGitHubRepositoryUrl, helpOpenGitHubRepositoryUrl, helpUpdateGithubToken, helpSwitchToPullRequestsScreen, helpUpdateUsername}
 
 type SettingsScreen struct {
 	TextInput               textinput.Model
@@ -91,6 +92,10 @@ func (r *SettingsScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				{
 					r.state = ADD_GITHUB_REPOSITORY_URL
 				}
+			case helpUpdateUsername.Shortcut:
+				{
+					r.state = UPDATE_USERNAME
+				}
 			case helpDeleteGitHubRepositoryUrl.Shortcut:
 				{
 					r.Settings.DeleteRepositoryUrl(r.Settings.Repositories[r.SelectedRepositoryIndex])
@@ -153,6 +158,16 @@ func (r *SettingsScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 							r.state = DEFAULT
 						}
+					case UPDATE_USERNAME:
+						{
+							r.Logger.Info(fmt.Sprintf("current input value %v", r.TextInput.Value()))
+
+							r.Settings.UpdateUsername(r.TextInput.Value())
+
+							r.TextInput.Reset()
+
+							r.state = DEFAULT
+						}
 					}
 
 				}
@@ -160,7 +175,7 @@ func (r *SettingsScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	if r.state == UPDATE_GITHUB_TOKEN || r.state == ADD_GITHUB_REPOSITORY_URL {
+	if r.state == UPDATE_GITHUB_TOKEN || r.state == ADD_GITHUB_REPOSITORY_URL || r.state == UPDATE_USERNAME {
 		r.TextInput, cmd = r.TextInput.Update(msg)
 	}
 
@@ -179,6 +194,13 @@ func (r *SettingsScreen) View() string {
 	if r.state == ADD_GITHUB_REPOSITORY_URL {
 		return StyledMain.Render(fmt.Sprintf(
 			"Paste your repository URL here:\n\n%s\n\n%s",
+			r.TextInput.View(),
+			"(esc to quit)") + "\n")
+	}
+
+	if r.state == UPDATE_USERNAME {
+		return StyledMain.Render(fmt.Sprintf(
+			"Type your GitHub username here:\n\n%s\n\n%s",
 			r.TextInput.View(),
 			"(esc to quit)") + "\n")
 	}
