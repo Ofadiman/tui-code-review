@@ -2,6 +2,7 @@ query getRepositoryInfo($owner: String!, $name: String!) {
   repository(owner: $owner, name: $name) {
     pullRequests(first: 20, states:OPEN) {
       nodes {
+        url
         id
         isDraft
         author {

@@ -72,7 +72,9 @@ func (v *getRepositoryInfoRepositoryPullRequestsPullRequestConnection) GetNodes(
 //
 // A repository pull request.
 type getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequest struct {
-	Id string `json:"id"`
+	// The HTTP URL for this pull request.
+	Url string `json:"url"`
+	Id  string `json:"id"`
 	// Identifies if the pull request is a draft.
 	IsDraft bool `json:"isDraft"`
 	// The actor who authored the comment.
@@ -85,6 +87,11 @@ type getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullReques
 	Title string `json:"title"`
 	// A list of review requests associated with the pull request.
 	ReviewRequests *getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestReviewRequestsReviewRequestConnection `json:"reviewRequests"`
+}
+
+// GetUrl returns getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequest.Url, and is useful for accessing the field via an interface.
+func (v *getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequest) GetUrl() string {
+	return v.Url
 }
 
 // GetId returns getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequest.Id, and is useful for accessing the field via an interface.
@@ -156,6 +163,8 @@ func (v *getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRe
 }
 
 type __premarshalgetRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequest struct {
+	Url string `json:"url"`
+
 	Id string `json:"id"`
 
 	IsDraft bool `json:"isDraft"`
@@ -182,6 +191,7 @@ func (v *getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRe
 func (v *getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequest) __premarshalJSON() (*__premarshalgetRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequest, error) {
 	var retval __premarshalgetRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequest
 
+	retval.Url = v.Url
 	retval.Id = v.Id
 	retval.IsDraft = v.IsDraft
 	{
@@ -999,6 +1009,7 @@ query getRepositoryInfo ($owner: String!, $name: String!) {
 	repository(owner: $owner, name: $name) {
 		pullRequests(first: 20, states: OPEN) {
 			nodes {
+				url
 				id
 				isDraft
 				author {

@@ -6,6 +6,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/muesli/reflow/wordwrap"
+	"os/exec"
+	"runtime"
 	"sort"
 	"strings"
 )
@@ -211,6 +213,31 @@ func (r *PullRequestsScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						r.SelectedPullRequestIndex = len(r.pullRequests) - 1
 					} else {
 						r.SelectedPullRequestIndex = r.SelectedPullRequestIndex - 1
+					}
+				}
+			case helpOpenPullRequest.Shortcut:
+				{
+					selectedPullRequest := r.pullRequests[r.SelectedPullRequestIndex]
+					var err error
+					switch runtime.GOOS {
+					case "linux":
+						{
+							err = exec.Command("xdg-open", selectedPullRequest.GetUrl()).Start()
+						}
+					case "windows":
+						{
+							err = exec.Command("rundll32", "url.dll,FileProtocolHandler", selectedPullRequest.GetUrl()).Start()
+						}
+					case "darwin":
+						{
+							err = exec.Command("open", selectedPullRequest.GetUrl()).Start()
+						}
+					default:
+						err = fmt.Errorf("unsupported platform %v", runtime.GOOS)
+					}
+
+					if err != nil {
+						panic(err)
 					}
 				}
 			}

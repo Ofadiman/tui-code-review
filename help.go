@@ -65,3 +65,9 @@ var helpSwitchToPullRequestsScreen = Help{
 	Description: "Switch to pull requests screen",
 	Display:     "Ctrl + P",
 }
+
+var helpOpenPullRequest = Help{
+	Shortcut:    "enter",
+	Description: "Open selected pull request",
+	Display:     "Enter",
+}
