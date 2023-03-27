@@ -13,7 +13,7 @@ const SCREEN_PULL_REQUESTS = "pull_requests"
 
 func NewRouter(settingsScreen *SettingsScreen, pullRequestsScreen *PullRequestsScreen, globalState *Window, settings *Settings, logger *Logger) *Router {
 	return &Router{
-		currentScreen:      SCREEN_PULL_REQUESTS,
+		currentScreen:      SCREEN_SETTINGS,
 		SettingsScreen:     settingsScreen,
 		PullRequestsScreen: pullRequestsScreen,
 		Window:             globalState,
@@ -54,12 +54,12 @@ func (r *Router) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.Type {
 		case tea.KeyCtrlS:
 			{
-				r.currentScreen = "settings"
+				r.currentScreen = SCREEN_SETTINGS
 				return r, cmd
 			}
 		case tea.KeyCtrlP:
 			{
-				r.currentScreen = "pull_requests"
+				r.currentScreen = SCREEN_PULL_REQUESTS
 				return r, cmd
 			}
 		case tea.KeyCtrlQ:

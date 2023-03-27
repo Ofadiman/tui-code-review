@@ -10,13 +10,16 @@ import (
 	"runtime"
 )
 
+// TODO: Delete this custom type because it does not make sense.
 type state string
 
 const (
-	ADD_GITHUB_TOKEN      state = "ADD_GITHUB_TOKEN"
-	ADD_GITHUB_REPOSITORY state = "ADD_GITHUB_REPOSITORY"
-	DEFAULT               state = "DEFAULT"
+	UPDATE_GITHUB_TOKEN       state = "UPDATE_GITHUB_TOKEN"
+	ADD_GITHUB_REPOSITORY_URL state = "ADD_GITHUB_REPOSITORY_URL"
+	DEFAULT                   state = "DEFAULT"
 )
+
+var SETTINGS_HELP = []Help{helpUp, helpDown, helpQuit, helpAddGitHubRepositoryUrl, helpDeleteGitHubRepositoryUrl, helpOpenGitHubRepositoryUrl, helpUpdateGithubToken}
 
 type SettingsScreen struct {
 	TextInput               textinput.Model
@@ -59,7 +62,7 @@ func (r *SettingsScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			r.Logger.KeyPress(msg.String())
 
 			switch msg.String() {
-			case "j":
+			case helpDown.Shortcut:
 				{
 					if r.SelectedRepositoryIndex == len(r.Repositories)-1 {
 						r.SelectedRepositoryIndex = 0
@@ -67,7 +70,7 @@ func (r *SettingsScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						r.SelectedRepositoryIndex = r.SelectedRepositoryIndex + 1
 					}
 				}
-			case "k":
+			case helpUp.Shortcut:
 				{
 					if r.SelectedRepositoryIndex == 0 {
 						r.SelectedRepositoryIndex = len(r.Repositories) - 1
@@ -75,26 +78,26 @@ func (r *SettingsScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						r.SelectedRepositoryIndex = r.SelectedRepositoryIndex - 1
 					}
 				}
-			case "esc":
+			case helpEscape.Shortcut:
 				{
-					if r.state == ADD_GITHUB_TOKEN || r.state == ADD_GITHUB_REPOSITORY {
+					if r.state == UPDATE_GITHUB_TOKEN || r.state == ADD_GITHUB_REPOSITORY_URL {
 						r.state = DEFAULT
 						r.TextInput.Reset()
 					}
 				}
-			case "ctrl+u":
+			case helpUpdateGithubToken.Shortcut:
 				{
-					r.state = ADD_GITHUB_TOKEN
+					r.state = UPDATE_GITHUB_TOKEN
 				}
-			case "ctrl+r":
+			case helpAddGitHubRepositoryUrl.Shortcut:
 				{
-					r.state = ADD_GITHUB_REPOSITORY
+					r.state = ADD_GITHUB_REPOSITORY_URL
 				}
-			case "delete":
+			case helpDeleteGitHubRepositoryUrl.Shortcut:
 				{
 					r.Settings.DeleteRepositoryUrl(r.Settings.Repositories[r.SelectedRepositoryIndex])
 				}
-			case "enter":
+			case helpOpenGitHubRepositoryUrl.Shortcut:
 				{
 					switch r.state {
 					case DEFAULT:
@@ -125,7 +128,7 @@ func (r *SettingsScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 								panic(err)
 							}
 						}
-					case ADD_GITHUB_TOKEN:
+					case UPDATE_GITHUB_TOKEN:
 						{
 							r.Logger.Info(fmt.Sprintf("current input value %v", r.TextInput.Value()))
 
@@ -138,7 +141,7 @@ func (r *SettingsScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 							r.state = DEFAULT
 						}
-					case ADD_GITHUB_REPOSITORY:
+					case ADD_GITHUB_REPOSITORY_URL:
 						{
 							r.Logger.Info(fmt.Sprintf("current input value %v", r.TextInput.Value()))
 
@@ -157,37 +160,23 @@ func (r *SettingsScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	if r.state == ADD_GITHUB_TOKEN || r.state == ADD_GITHUB_REPOSITORY {
+	if r.state == UPDATE_GITHUB_TOKEN || r.state == ADD_GITHUB_REPOSITORY_URL {
 		r.TextInput, cmd = r.TextInput.Update(msg)
 	}
 
 	return r, cmd
 }
 
-var greyText = lipgloss.NewStyle().Foreground(lipgloss.Color("245"))
-var whiteText = lipgloss.NewStyle().Foreground(lipgloss.Color("231"))
-
-const DELIMITER = " • "
-
-var HELP_QUIT = lipgloss.JoinHorizontal(lipgloss.Left, whiteText.Render("Ctrl+Q"), " ", greyText.Render("Quit program"))
-var HELP_UPDATE_GITHUB_TOKEN = lipgloss.JoinHorizontal(lipgloss.Left, whiteText.Render("Ctrl+U"), " ", greyText.Render("Update GitHub token"))
-var HELP_ADD_GITHUB_REPOSITORY = lipgloss.JoinHorizontal(lipgloss.Left, whiteText.Render("Ctrl+R"), " ", greyText.Render("Add GitHub repository"))
-var HELP_DELETE_GITHUB_REPOSITORY = lipgloss.JoinHorizontal(lipgloss.Left, whiteText.Render("Delete"), " ", greyText.Render("Delete selected GitHub repository"))
-var HELP_OPEN_GITHUB_REPOSITORY = lipgloss.JoinHorizontal(lipgloss.Left, whiteText.Render("Enter"), " ", greyText.Render("Open selected GitHub repository"))
-var HELP_J = lipgloss.JoinHorizontal(lipgloss.Left, whiteText.Render("J"), " ", greyText.Render("Move down"))
-var HELP_K = lipgloss.JoinHorizontal(lipgloss.Left, whiteText.Render("K"), " ", greyText.Render("Move up"))
-var HELP = lipgloss.JoinHorizontal(lipgloss.Left, HELP_QUIT, DELIMITER, HELP_UPDATE_GITHUB_TOKEN, DELIMITER, HELP_ADD_GITHUB_REPOSITORY, DELIMITER, HELP_DELETE_GITHUB_REPOSITORY, DELIMITER, HELP_OPEN_GITHUB_REPOSITORY, DELIMITER, HELP_J, DELIMITER, HELP_K)
-
 func (r *SettingsScreen) View() string {
 
-	if r.state == ADD_GITHUB_TOKEN {
+	if r.state == UPDATE_GITHUB_TOKEN {
 		return StyledMain.Render(fmt.Sprintf(
 			"Paste your GitHub token here:\n\n%s\n\n%s",
 			r.TextInput.View(),
 			"(esc to quit)") + "\n")
 	}
 
-	if r.state == ADD_GITHUB_REPOSITORY {
+	if r.state == ADD_GITHUB_REPOSITORY_URL {
 		return StyledMain.Render(fmt.Sprintf(
 			"Paste your repository URL here:\n\n%s\n\n%s",
 			r.TextInput.View(),
@@ -208,8 +197,14 @@ func (r *SettingsScreen) View() string {
 		}
 	}
 
-	wrapper := wordwrap.NewWriter(r.Window.Width)
-	_, err := wrapper.Write([]byte(HELP))
+	helpString := ""
+	for _, help := range SETTINGS_HELP {
+		helpString += lipgloss.JoinHorizontal(lipgloss.Left, StyledHelpShortcut.Render(help.Display), " ", StyledHelpDescription.Render(help.Description), "   ")
+	}
+
+	wrapper := wordwrap.NewWriter(r.Window.Width - StyledMain.GetHorizontalPadding())
+	wrapper.Breakpoints = []rune{' '}
+	_, err := wrapper.Write([]byte(helpString))
 	if err != nil {
 		r.Logger.Error(err)
 	}
