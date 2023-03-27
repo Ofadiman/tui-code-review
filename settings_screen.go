@@ -10,20 +10,17 @@ import (
 	"runtime"
 )
 
-// TODO: Delete this custom type because it does not make sense.
-type state string
-
 const (
-	UPDATE_GITHUB_TOKEN       state = "UPDATE_GITHUB_TOKEN"
-	ADD_GITHUB_REPOSITORY_URL state = "ADD_GITHUB_REPOSITORY_URL"
-	DEFAULT                   state = "DEFAULT"
+	UPDATE_GITHUB_TOKEN       string = "UPDATE_GITHUB_TOKEN"
+	ADD_GITHUB_REPOSITORY_URL string = "ADD_GITHUB_REPOSITORY_URL"
+	DEFAULT                   string = "DEFAULT"
 )
 
 var SETTINGS_HELP = []Help{helpUp, helpDown, helpQuit, helpAddGitHubRepositoryUrl, helpDeleteGitHubRepositoryUrl, helpOpenGitHubRepositoryUrl, helpUpdateGithubToken}
 
 type SettingsScreen struct {
 	TextInput               textinput.Model
-	state                   state
+	state                   string
 	SelectedRepositoryIndex int
 	*Window
 	*Settings
