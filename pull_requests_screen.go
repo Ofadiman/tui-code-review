@@ -23,7 +23,7 @@ type PullRequestsScreen struct {
 
 type PullRequest struct {
 	*getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequest
-	state string
+	order int
 }
 
 func NewPullRequestsScreen(globalState *Window, settings *Settings, logger *Logger, githubApi *GithubApi) *PullRequestsScreen {
@@ -35,12 +35,12 @@ func NewPullRequestsScreen(globalState *Window, settings *Settings, logger *Logg
 	}
 }
 
-// TODO: handle case of commented pull request.
 const (
-	PULL_REQUEST_AWAITING = "PULL_REQUEST_AWAITING"
-	PULL_REQUEST_REJECTED = "PULL_REQUEST_REJECTED"
-	PULL_REQUEST_APPROVED = "PULL_REQUEST_APPROVED"
-	PULL_REQUEST_DRAFT    = "PULL_REQUEST_DRAFT"
+	PULL_REQUEST_AWAITING  = 1
+	PULL_REQUEST_REJECTED  = 2
+	PULL_REQUEST_COMMENTED = 3
+	PULL_REQUEST_APPROVED  = 4
+	PULL_REQUEST_DRAFT     = 5
 )
 
 func mapGithubPullRequestsToApplicationPullRequests(githubPullRequests []*getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequest, user string) []*PullRequest {
@@ -51,14 +51,16 @@ func mapGithubPullRequestsToApplicationPullRequests(githubPullRequests []*getRep
 		}
 
 		if githubPullRequest.GetIsDraft() == true {
-			pullRequest.state = PULL_REQUEST_DRAFT
+			pullRequest.order = PULL_REQUEST_DRAFT
 		} else {
 			for _, latestReviews := range githubPullRequest.GetLatestReviews().GetNodes() {
 				if latestReviews.GetAuthor().GetLogin() == user {
 					if latestReviews.GetState() == PullRequestReviewStateApproved {
-						pullRequest.state = PULL_REQUEST_APPROVED
+						pullRequest.order = PULL_REQUEST_APPROVED
 					} else if latestReviews.GetState() == PullRequestReviewStateChangesRequested {
-						pullRequest.state = PULL_REQUEST_REJECTED
+						pullRequest.order = PULL_REQUEST_REJECTED
+					} else if latestReviews.GetState() == PullRequestReviewStateCommented {
+						pullRequest.order = PULL_REQUEST_COMMENTED
 					}
 				}
 			}
@@ -67,7 +69,7 @@ func mapGithubPullRequestsToApplicationPullRequests(githubPullRequests []*getRep
 				requestedReviewer, ok := reviewRequest.GetRequestedReviewer().(*getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestReviewRequestsReviewRequestConnectionNodesReviewRequestRequestedReviewerUser)
 				if ok {
 					if requestedReviewer.GetLogin() == user {
-						pullRequest.state = PULL_REQUEST_AWAITING
+						pullRequest.order = PULL_REQUEST_AWAITING
 					}
 				}
 			}
@@ -89,89 +91,17 @@ func getGithubPullRequestsFromRepositories(repositoryInfoResponses []*getReposit
 	return pullRequests
 }
 
-func sortPullRequestsForMe(pullRequestsForMe []*getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequest, logger *Logger, username string) {
+func sortPullRequestsForMe(pullRequestsForMe []*PullRequest, logger *Logger, username string) {
 	sort.Slice(pullRequestsForMe, func(i, j int) bool {
-		if pullRequestsForMe[i].GetIsDraft() == true && pullRequestsForMe[j].GetIsDraft() == false {
+		if pullRequestsForMe[i].order == pullRequestsForMe[j].order {
+			return pullRequestsForMe[i].GetCreatedAt().After(pullRequestsForMe[j].GetCreatedAt())
+		}
+
+		if pullRequestsForMe[i].order > pullRequestsForMe[j].order {
 			return false
 		}
 
-		if pullRequestsForMe[i].GetIsDraft() == false && pullRequestsForMe[j].GetIsDraft() == true {
-			return true
-		}
-
-		if pullRequestsForMe[i].GetIsDraft() == pullRequestsForMe[j].GetIsDraft() {
-			isFirstAwaiting := false
-			isSecondAwaiting := false
-
-			for _, node := range pullRequestsForMe[i].GetReviewRequests().GetNodes() {
-				requestedReviewer, ok := node.GetRequestedReviewer().(*getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestReviewRequestsReviewRequestConnectionNodesReviewRequestRequestedReviewerUser)
-				if ok {
-					if requestedReviewer.GetLogin() == username {
-						isFirstAwaiting = true
-					}
-				} else {
-					logger.Info("requested reviewer is not it the shape I expect")
-				}
-			}
-
-			for _, node := range pullRequestsForMe[j].GetReviewRequests().GetNodes() {
-				logger.Struct(node)
-
-				requestedReviewer, ok := node.GetRequestedReviewer().(*getRepositoryInfoRepositoryPullRequestsPullRequestConnectionNodesPullRequestReviewRequestsReviewRequestConnectionNodesReviewRequestRequestedReviewerUser)
-				if ok {
-					if requestedReviewer.GetLogin() == username {
-						isSecondAwaiting = true
-					}
-				} else {
-					logger.Info("requested reviewer is not it the shape I expect")
-				}
-			}
-
-			isFirstRejected := false
-			isSecondRejected := false
-			isFirstApproved := false
-			isSecondApproved := false
-
-			for _, node := range pullRequestsForMe[i].GetLatestReviews().GetNodes() {
-				if node.GetAuthor().GetLogin() == username {
-					if node.GetState() == PullRequestReviewStateApproved {
-						isFirstApproved = true
-					}
-
-					if node.GetState() == PullRequestReviewStateChangesRequested {
-						isFirstRejected = true
-					}
-				}
-			}
-
-			for _, node := range pullRequestsForMe[j].GetLatestReviews().GetNodes() {
-				if node.GetAuthor().GetLogin() == username {
-					if node.GetState() == PullRequestReviewStateApproved {
-						isSecondApproved = true
-					}
-
-					if node.GetState() == PullRequestReviewStateChangesRequested {
-						isSecondRejected = true
-					}
-				}
-			}
-
-			if isFirstRejected && isSecondAwaiting {
-				return false
-			}
-
-			if isFirstApproved && (isSecondAwaiting || isSecondRejected) {
-				return false
-			}
-
-			if isFirstApproved && isSecondApproved || isFirstAwaiting && isSecondAwaiting || isFirstRejected && isSecondRejected {
-				return pullRequestsForMe[i].GetCreatedAt().After(pullRequestsForMe[j].GetCreatedAt())
-			}
-
-			return true
-		}
-
-		return false
+		return true
 	})
 }
 
@@ -253,11 +183,11 @@ func (r *PullRequestsScreen) Init() tea.Cmd {
 	// TODO: Take user from settings.
 	pullRequestsForMe := findPullRequestsForMe(allPullRequestsFromWatchedRepositories, r.Settings.Username)
 
-	sortPullRequestsForMe(pullRequestsForMe, r.Logger, r.Settings.Username)
+	r.pullRequests = mapGithubPullRequestsToApplicationPullRequests(pullRequestsForMe, r.Settings.Username)
+
+	sortPullRequestsForMe(r.pullRequests, r.Logger, r.Settings.Username)
 
 	r.Logger.Struct(pullRequestsForMe)
-
-	r.pullRequests = mapGithubPullRequestsToApplicationPullRequests(pullRequestsForMe, r.Settings.Username)
 
 	return nil
 }
@@ -293,17 +223,18 @@ func (r *PullRequestsScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (r *PullRequestsScreen) View() string {
 	header := StyledHeader.Render("Pull requests")
 
-	pullRequestStateToUI := map[string]string{
-		PULL_REQUEST_AWAITING: StyledAwaiting.Render("review required"),
-		PULL_REQUEST_APPROVED: StyledApproved.Render("approved"),
-		PULL_REQUEST_REJECTED: StyledChangesRequested.Render("changes requested"),
-		PULL_REQUEST_DRAFT:    StyledDraft.Render("draft"),
+	pullRequestStateToUI := map[int]string{
+		PULL_REQUEST_AWAITING:  StyledAwaiting.Render("review required"),
+		PULL_REQUEST_APPROVED:  StyledApproved.Render("approved"),
+		PULL_REQUEST_REJECTED:  StyledChangesRequested.Render("changes requested"),
+		PULL_REQUEST_DRAFT:     StyledDraft.Render("draft"),
+		PULL_REQUEST_COMMENTED: StyledCommented.Render("commented"),
 	}
 	var pullRequestMessage string
 	for i, pullRequest := range r.pullRequests {
-		info, ok := pullRequestStateToUI[pullRequest.state]
+		info, ok := pullRequestStateToUI[pullRequest.order]
 		if !ok {
-			r.Logger.Info(fmt.Sprintf("info does not exist for pull request state %v", pullRequest.state))
+			r.Logger.Info(fmt.Sprintf("info does not exist for pull request state %v", pullRequest.order))
 		}
 
 		if i == r.SelectedPullRequestIndex {
