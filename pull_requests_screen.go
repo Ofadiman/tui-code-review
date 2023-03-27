@@ -285,17 +285,22 @@ func (r *PullRequestsScreen) View() string {
 		PULL_REQUEST_DRAFT:     StyledDraft.Render("draft"),
 		PULL_REQUEST_COMMENTED: StyledCommented.Render("commented"),
 	}
-	var pullRequestMessage string
-	for i, pullRequest := range r.pullRequests {
-		info, ok := pullRequestStateToUI[pullRequest.order]
-		if !ok {
-			r.Logger.Info(fmt.Sprintf("info does not exist for pull request state %v", pullRequest.order))
-		}
 
-		if i == r.SelectedPullRequestIndex {
-			pullRequestMessage += StyledUnderline.Render(fmt.Sprintf("• %v wants to merge \"%v\"", pullRequest.GetAuthor().GetLogin(), pullRequest.GetTitle())) + " (" + info + ")\n"
-		} else {
-			pullRequestMessage += fmt.Sprintf("• %v wants to merge \"%v\" (%v)\n", pullRequest.GetAuthor().GetLogin(), pullRequest.GetTitle(), info)
+	var pullRequestMessage string
+	if len(r.pullRequests) == 0 {
+		pullRequestMessage = "You do not have any pull requests yet.\n"
+	} else {
+		for i, pullRequest := range r.pullRequests {
+			info, ok := pullRequestStateToUI[pullRequest.order]
+			if !ok {
+				r.Logger.Info(fmt.Sprintf("info does not exist for pull request state %v", pullRequest.order))
+			}
+
+			if i == r.SelectedPullRequestIndex {
+				pullRequestMessage += StyledUnderline.Render(fmt.Sprintf("• %v wants to merge \"%v\"", pullRequest.GetAuthor().GetLogin(), pullRequest.GetTitle())) + " (" + info + ")\n"
+			} else {
+				pullRequestMessage += fmt.Sprintf("• %v wants to merge \"%v\" (%v)\n", pullRequest.GetAuthor().GetLogin(), pullRequest.GetTitle(), info)
+			}
 		}
 	}
 	pullRequestsWrapper := wordwrap.NewWriter(r.Window.Width - StyledMain.GetHorizontalPadding())
