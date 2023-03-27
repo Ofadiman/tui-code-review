@@ -71,3 +71,9 @@ var helpOpenPullRequest = Help{
 	Description: "Open selected pull request",
 	Display:     "Enter",
 }
+
+var helpOpenAllActivePullRequests = Help{
+	Shortcut:    "ctrl+o",
+	Description: "Open all active pull requests",
+	Display:     "Ctrl + O",
+}

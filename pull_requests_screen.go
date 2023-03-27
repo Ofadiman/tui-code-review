@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-var PULL_REQUESTS_HELP = []Help{helpUp, helpDown, helpSwitchToSettingsScreen}
+var PULL_REQUESTS_HELP = []Help{helpUp, helpDown, helpSwitchToSettingsScreen, helpOpenAllActivePullRequests, helpOpenPullRequest}
 
 type PullRequestsScreen struct {
 	*Window
@@ -238,6 +238,34 @@ func (r *PullRequestsScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 					if err != nil {
 						panic(err)
+					}
+				}
+			case helpOpenAllActivePullRequests.Shortcut:
+				{
+					for _, pullRequest := range r.pullRequests {
+						if pullRequest.order <= 3 {
+							var err error
+							switch runtime.GOOS {
+							case "linux":
+								{
+									err = exec.Command("xdg-open", pullRequest.GetUrl()).Start()
+								}
+							case "windows":
+								{
+									err = exec.Command("rundll32", "url.dll,FileProtocolHandler", pullRequest.GetUrl()).Start()
+								}
+							case "darwin":
+								{
+									err = exec.Command("open", pullRequest.GetUrl()).Start()
+								}
+							default:
+								err = fmt.Errorf("unsupported platform %v", runtime.GOOS)
+							}
+
+							if err != nil {
+								panic(err)
+							}
+						}
 					}
 				}
 			}
