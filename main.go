@@ -51,18 +51,18 @@ func (r *Router) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		switch msg.Type {
-		case tea.KeyCtrlS:
+		switch msg.String() {
+		case helpSwitchToSettingsScreen.Shortcut:
 			{
 				r.currentScreen = SCREEN_SETTINGS
 				return r, cmd
 			}
-		case tea.KeyCtrlP:
+		case helpSwitchToPullRequestsScreen.Shortcut:
 			{
 				r.currentScreen = SCREEN_PULL_REQUESTS
 				return r, cmd
 			}
-		case tea.KeyCtrlQ:
+		case helpQuit.Shortcut:
 			{
 				return r, tea.Quit
 			}

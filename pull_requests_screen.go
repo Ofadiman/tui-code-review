@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-var PULL_REQUESTS_HELP = []Help{helpUp, helpDown}
+var PULL_REQUESTS_HELP = []Help{helpUp, helpDown, helpSwitchToSettingsScreen}
 
 type PullRequestsScreen struct {
 	*Window

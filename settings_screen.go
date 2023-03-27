@@ -17,7 +17,7 @@ const (
 	DEFAULT                   string = "DEFAULT"
 )
 
-var SETTINGS_HELP = []Help{helpUp, helpDown, helpQuit, helpAddGitHubRepositoryUrl, helpDeleteGitHubRepositoryUrl, helpOpenGitHubRepositoryUrl, helpUpdateGithubToken}
+var SETTINGS_HELP = []Help{helpUp, helpDown, helpQuit, helpAddGitHubRepositoryUrl, helpDeleteGitHubRepositoryUrl, helpOpenGitHubRepositoryUrl, helpUpdateGithubToken, helpSwitchToPullRequestsScreen}
 
 type SettingsScreen struct {
 	TextInput               textinput.Model

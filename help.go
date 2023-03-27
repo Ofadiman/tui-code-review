@@ -53,3 +53,15 @@ var helpEscape = Help{
 	Description: "Close current window",
 	Display:     "Escape",
 }
+
+var helpSwitchToSettingsScreen = Help{
+	Shortcut:    "ctrl+s",
+	Description: "Switch to settings screen",
+	Display:     "Ctrl + S",
+}
+
+var helpSwitchToPullRequestsScreen = Help{
+	Shortcut:    "ctrl+p",
+	Description: "Switch to pull requests screen",
+	Display:     "Ctrl + P",
+}
