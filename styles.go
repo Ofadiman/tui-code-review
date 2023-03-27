@@ -19,3 +19,5 @@ var StyledAwaiting = lipgloss.NewStyle().Foreground(ColorDeepSkyBlue)
 var StyledDraft = lipgloss.NewStyle().Foreground(ColorGrey)
 var StyledHelpShortcut = lipgloss.NewStyle().Foreground(ColorWhite)
 var StyledHelpDescription = lipgloss.NewStyle().Foreground(ColorGrey)
+
+var StyledUnderline = lipgloss.NewStyle().Underline(true)

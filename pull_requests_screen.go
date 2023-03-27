@@ -17,7 +17,8 @@ type PullRequestsScreen struct {
 	*Settings
 	*Logger
 	*GithubApi
-	pullRequests []*PullRequest
+	pullRequests             []*PullRequest
+	SelectedPullRequestIndex int
 }
 
 type PullRequest struct {
@@ -266,10 +267,21 @@ func (r *PullRequestsScreen) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		{
 			switch msg.String() {
-			case "s":
+			case helpDown.Shortcut:
 				{
-					r.Logger.KeyPress("s")
-					return r, nil
+					if r.SelectedPullRequestIndex == len(r.pullRequests)-1 {
+						r.SelectedPullRequestIndex = 0
+					} else {
+						r.SelectedPullRequestIndex = r.SelectedPullRequestIndex + 1
+					}
+				}
+			case helpUp.Shortcut:
+				{
+					if r.SelectedPullRequestIndex == 0 {
+						r.SelectedPullRequestIndex = len(r.pullRequests) - 1
+					} else {
+						r.SelectedPullRequestIndex = r.SelectedPullRequestIndex - 1
+					}
 				}
 			}
 		}
@@ -288,13 +300,17 @@ func (r *PullRequestsScreen) View() string {
 		PULL_REQUEST_DRAFT:    StyledDraft.Render("draft"),
 	}
 	var pullRequestMessage string
-	for _, pullRequest := range r.pullRequests {
+	for i, pullRequest := range r.pullRequests {
 		info, ok := pullRequestStateToUI[pullRequest.state]
 		if !ok {
 			r.Logger.Info(fmt.Sprintf("info does not exist for pull request state %v", pullRequest.state))
 		}
 
-		pullRequestMessage += fmt.Sprintf("• %v wants to merge \"%v\" (%v)\n", pullRequest.GetAuthor().GetLogin(), pullRequest.GetTitle(), info)
+		if i == r.SelectedPullRequestIndex {
+			pullRequestMessage += StyledUnderline.Render(fmt.Sprintf("• %v wants to merge \"%v\"", pullRequest.GetAuthor().GetLogin(), pullRequest.GetTitle())) + " (" + info + ")\n"
+		} else {
+			pullRequestMessage += fmt.Sprintf("• %v wants to merge \"%v\" (%v)\n", pullRequest.GetAuthor().GetLogin(), pullRequest.GetTitle(), info)
+		}
 	}
 	pullRequestsWrapper := wordwrap.NewWriter(r.Window.Width - StyledMain.GetHorizontalPadding())
 	pullRequestsWrapper.Breakpoints = []rune{' '}
