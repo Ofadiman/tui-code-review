@@ -13,7 +13,7 @@ const SCREEN_PULL_REQUESTS = "pull_requests"
 
 func NewRouter(settingsScreen *SettingsScreen, pullRequestsScreen *PullRequestsScreen, globalState *Window, settings *Settings, logger *Logger) *Router {
 	return &Router{
-		currentScreen:      SCREEN_SETTINGS,
+		currentScreen:      SCREEN_PULL_REQUESTS,
 		SettingsScreen:     settingsScreen,
 		PullRequestsScreen: pullRequestsScreen,
 		Window:             globalState,

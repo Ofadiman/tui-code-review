@@ -10,6 +10,8 @@ import (
 	"strings"
 )
 
+var PULL_REQUESTS_HELP = []Help{helpUp, helpDown}
+
 type PullRequestsScreen struct {
 	*Window
 	*Settings
@@ -294,12 +296,23 @@ func (r *PullRequestsScreen) View() string {
 
 		pullRequestMessage += fmt.Sprintf("• %v wants to merge \"%v\" (%v)\n", pullRequest.GetAuthor().GetLogin(), pullRequest.GetTitle(), info)
 	}
-	f := wordwrap.NewWriter(r.Window.Width - StyledMain.GetHorizontalPadding())
-	f.Breakpoints = []rune{' '}
-	_, err := f.Write([]byte(pullRequestMessage))
+	pullRequestsWrapper := wordwrap.NewWriter(r.Window.Width - StyledMain.GetHorizontalPadding())
+	pullRequestsWrapper.Breakpoints = []rune{' '}
+	_, err := pullRequestsWrapper.Write([]byte(pullRequestMessage))
 	if err != nil {
 		r.Logger.Error(err)
 	}
 
-	return StyledMain.Render(lipgloss.JoinVertical(lipgloss.Left, header, f.String()))
+	helpString := ""
+	for _, help := range PULL_REQUESTS_HELP {
+		helpString += lipgloss.JoinHorizontal(lipgloss.Left, StyledHelpShortcut.Render(help.Display), " ", StyledHelpDescription.Render(help.Description), "   ")
+	}
+	helpWrapper := wordwrap.NewWriter(r.Window.Width - StyledMain.GetHorizontalPadding())
+	helpWrapper.Breakpoints = []rune{' '}
+	_, err = helpWrapper.Write([]byte(helpString))
+	if err != nil {
+		r.Logger.Error(err)
+	}
+
+	return StyledMain.Render(lipgloss.JoinVertical(lipgloss.Left, header, pullRequestsWrapper.String(), helpWrapper.String()))
 }
